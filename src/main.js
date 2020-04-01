@@ -14,7 +14,7 @@ const createTripInfoTemplate = () => {
   );
 };
 
-const createCoastTemplate = () => {
+const createCostTemplate = () => {
   return (
     `<p class="trip-info__cost">
       Total: &euro;&nbsp;<span class="trip-info__cost-value">1230</span>
@@ -266,7 +266,7 @@ const menuTitle = tripMainContainer.querySelector(`h2:first-child`);
 renderElement(tripMainContainer, createTripInfoTemplate(), `afterBegin`);
 
 const tripInfoContainer = tripMainContainer.querySelector(`.trip-info`);
-renderElement(tripInfoContainer, createCoastTemplate(), `beforeEnd`);
+renderElement(tripInfoContainer, createCostTemplate(), `beforeEnd`);
 
 renderElement(menuTitle, createMenuTemplate(), `afterEnd`);
 renderElement(menuContainer, createFilterTemplate(), `beforeEnd`);
