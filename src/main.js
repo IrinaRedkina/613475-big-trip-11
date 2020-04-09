@@ -2,9 +2,9 @@ import {createTripInfoTemplate} from './components/trip-info';
 import {createCostTemplate} from './components/cost';
 import {createMenuTemplate} from './components/menu';
 import {createFilterTemplate} from './components/filter';
-import {createTripEventsTemplate} from './components/trip-events';
-import {createTripEventTemplate} from './components/trip-event';
-import {createEditTripEventTemplate} from './components/edit-trip-event';
+import {createEventsTemplate} from './components/events';
+import {createEventTemplate} from './components/event';
+import {createEditEventTemplate} from './components/edit-event';
 
 const TRIP_EVENT_COUNT = 3;
 
@@ -25,11 +25,11 @@ renderElement(menuTitle, createMenuTemplate(), `afterEnd`);
 renderElement(menuContainer, createFilterTemplate(), `beforeEnd`);
 
 const tripEventsContainer = document.querySelector(`.trip-events`);
-renderElement(tripEventsContainer, createTripEventsTemplate(), `beforeEnd`);
+renderElement(tripEventsContainer, createEventsTemplate(), `beforeEnd`);
 
 const tripEventsList = tripEventsContainer.querySelector(`.trip-events__list`);
-renderElement(tripEventsList, createEditTripEventTemplate(), `beforeEnd`);
+renderElement(tripEventsList, createEditEventTemplate(), `beforeEnd`);
 
 for (let i = 0; i < TRIP_EVENT_COUNT; i++) {
-  renderElement(tripEventsList, createTripEventTemplate(), `beforeEnd`);
+  renderElement(tripEventsList, createEventTemplate(), `beforeEnd`);
 }
