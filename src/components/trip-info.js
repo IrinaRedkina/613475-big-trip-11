@@ -1,4 +1,4 @@
-import {formatDate} from '../util';
+import {formatDate, createElement} from '../util';
 
 const getShortRoute = (cities) => {
   return [
@@ -31,4 +31,27 @@ const createTripInfoTemplate = (tripDateStart, tripDateEnd, routePoints) => {
   );
 };
 
-export {createTripInfoTemplate};
+export default class TripInfoComponent {
+  constructor(dateStart, dateEnd, routePoints) {
+    this._dateStart = dateStart;
+    this._dateEnd = dateEnd;
+    this._routePoints = routePoints;
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createTripInfoTemplate(this._dateStart, this._dateEnd, this._routePoints);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}

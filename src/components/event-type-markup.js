@@ -31,7 +31,7 @@ const createGroupMarkup = (group, selectedType, idEvent) => {
   );
 };
 
-const createTypeListMarkup = (selectedType, idEvent) => {
+export const createTypeListMarkup = (selectedType, idEvent) => {
   const groups = new Set(typeList.map((type) => types[type][`group`]));
   let groupsMarkup = ``;
 
@@ -45,5 +45,3 @@ const createTypeListMarkup = (selectedType, idEvent) => {
     </div>`
   );
 };
-
-export {createTypeListMarkup};
