@@ -1,13 +1,14 @@
 import {createTripInfoTemplate} from './components/trip-info';
 import {createCostTemplate} from './components/cost';
 import {createMenuTemplate} from './components/menu';
-import {filters} from './mock/filter';
 import {createFilterTemplate} from './components/filter';
-import {generateEvents} from './mock/event';
 import {createSortTemplate} from './components/sort';
 import {createDaysTemplate} from './components/days';
+import {createDayTemplate} from './components/day';
 import {createEventTemplate} from './components/event';
 import {createEditEventTemplate} from './components/event-edit';
+import {filters} from './mock/filter';
+import {generateEvents} from './mock/event';
 import flatpickr from 'flatpickr';
 
 const TRIP_EVENT_COUNT = 5;
@@ -25,18 +26,19 @@ const renderElement = (container, template, place) => {
   container.insertAdjacentHTML(place, template);
 };
 
-const tripMainContainer = document.querySelector(`.trip-main`);
-renderElement(tripMainContainer, createTripInfoTemplate(tripDateStart, tirpDateEnd, routePoints), `afterBegin`);
+const siteHeaderContainer = document.querySelector(`.trip-main`);
+const menuContainer = siteHeaderContainer.querySelector(`.trip-controls`);
 
-const menuContainer = tripMainContainer.querySelector(`.trip-controls`);
-const menuTitle = tripMainContainer.querySelector(`h2:first-child`);
-const tripInfoContainer = tripMainContainer.querySelector(`.trip-info`);
-const tripEventsContainer = document.querySelector(`.trip-events`);
-
-renderElement(tripInfoContainer, createCostTemplate(totalPrice), `beforeEnd`);
-renderElement(menuTitle, createMenuTemplate(), `afterEnd`);
+renderElement(siteHeaderContainer, createTripInfoTemplate(tripDateStart, tirpDateEnd, routePoints), `afterBegin`);
+renderElement(menuContainer.querySelector(`h2:first-child`), createMenuTemplate(), `afterEnd`);
 renderElement(menuContainer, createFilterTemplate(filters), `beforeEnd`);
+
+const tripInfoContainer = siteHeaderContainer.querySelector(`.trip-info`);
+renderElement(tripInfoContainer, createCostTemplate(totalPrice), `beforeEnd`);
+
+const tripEventsContainer = document.querySelector(`.trip-events`);
 renderElement(tripEventsContainer, createSortTemplate(), `beforeEnd`);
+renderElement(tripEventsContainer, createDaysTemplate(), `beforeEnd`);
 
 
 /*
@@ -55,7 +57,7 @@ eventsByDays.forEach((day, i, items) => {
   const prevDate = getPrevDate(items[i - 1]);
 
   if (currentDate.toDateString() !== prevDate.toDateString()) {
-    renderElement(tripDayList, createDaysTemplate(dateCount, day.dueDateStart), `beforeEnd`);
+    renderElement(tripDayList, createDayTemplate(dateCount, day.dueDateStart), `beforeEnd`);
     eventList = tripDayList.querySelector(`.trip-events__list--day-${dateCount}`);
     dateCount += 1;
   }
