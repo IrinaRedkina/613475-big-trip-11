@@ -1,11 +1,14 @@
 import {formatDate, createElement} from '../util';
 
-const getShortRoute = (cities) => {
-  return [
-    cities[0],
-    `...`,
-    cities[cities.length - 1]
-  ];
+const MAX_CITIES_IN_TITLE_COUNT = 3;
+const CITIES_SEPARATION = `...`;
+
+const getCitiesString = (cities) => {
+  const separation = `&mdash; ${CITIES_SEPARATION} &mdash;`;
+  const firstElement = cities[0];
+  const lastElement = cities[cities.length - 1];
+
+  return `${firstElement} ${separation} ${lastElement}`;
 };
 
 const createTripInfoTemplate = (tripDateStart, tripDateEnd, routePoints) => {
@@ -19,12 +22,12 @@ const createTripInfoTemplate = (tripDateStart, tripDateEnd, routePoints) => {
   const dateEnd = isOneDate ? `` : `${delimiter} ${formatDate(tripDateEnd, formattingDateEnd)}`;
 
   const cities = routePoints.filter((city, i, items) => city !== items[i - 1]);
-  const tripCities = cities.length > 3 ? getShortRoute(cities) : cities;
+  const tripCities = cities.length > MAX_CITIES_IN_TITLE_COUNT ? getCitiesString(cities) : cities.join(` &mdash; `);
 
   return (
     `<section class="trip-main__trip-info  trip-info">
       <div class="trip-info__main">
-        <h1 class="trip-info__title">${tripCities.join(` &mdash; `)}</h1>
+        <h1 class="trip-info__title">${tripCities}</h1>
         <p class="trip-info__dates">${dateStart} ${dateEnd}</p>
       </div>
     </section>`
