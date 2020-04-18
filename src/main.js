@@ -9,7 +9,7 @@ import EventComponent from './components/event';
 import EditEventComponent from './components/event-edit';
 import {filters} from './mock/filter';
 import {generateEvents} from './mock/event';
-import {render, RenderPosition} from './util';
+import {render, RenderPosition, Key} from './util';
 import flatpickr from 'flatpickr';
 
 const TRIP_EVENT_COUNT = 5;
@@ -93,17 +93,27 @@ const renderEvent = (eventsList, event, index) => {
     eventsList.replaceChild(eventComponent.getElement(), editEventComponent.getElement());
   };
 
+  const onEscKeyDown = (evt) => {
+    if (evt.key === Key.ESC || evt.key === Key.ESC_SHORT) {
+      replaceEditToTask();
+      document.removeEventListener(`keydown`, onEscKeyDown);
+    }
+  };
+
   editEventOpen.addEventListener(`click`, () => {
     replaceEventToEdit();
+    document.addEventListener(`keydown`, onEscKeyDown);
   });
 
   editEventClose.addEventListener(`click`, () => {
     replaceEditToTask();
+    document.removeEventListener(`keydown`, onEscKeyDown);
   });
 
   eventForm.addEventListener(`submit`, (evt) => {
     evt.preventDefault();
     replaceEditToTask();
+    document.removeEventListener(`keydown`, onEscKeyDown);
   });
 
   render(eventsList, eventComponent.getElement(), RenderPosition.BEFOREEND);
