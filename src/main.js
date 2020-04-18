@@ -1,3 +1,4 @@
+import InfoComponent from './components/info';
 import TripInfoComponent from './components/trip-info';
 import CostComponent from './components/cost';
 import MenuComponent from './components/menu';
@@ -7,6 +8,7 @@ import DaysComponent from './components/days';
 import DayComponent from './components/day';
 import EventComponent from './components/event';
 import EditEventComponent from './components/event-edit';
+import EventsEmptyComponent from './components/events-empty';
 import {filters} from './mock/filter';
 import {generateEvents} from './mock/event';
 import {render, RenderPosition, Key} from './util';
@@ -14,14 +16,7 @@ import flatpickr from 'flatpickr';
 
 const TRIP_EVENT_COUNT = 5;
 const INPUT_DATE_FORMAT = `d/m/y H:i`;
-
 const events = generateEvents(TRIP_EVENT_COUNT);
-const totalPrice = events.reduce((acc, event) => acc + event.price, 0);
-const eventsByDays = events.slice().sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
-
-const tripDateStart = eventsByDays[0].dueDateStart;
-const tirpDateEnd = eventsByDays[eventsByDays.length - 1].dueDateEnd;
-const routePoints = eventsByDays.map((item) => item.city);
 
 const getPrevDate = (prevEvent) => {
   return prevEvent ? prevEvent.dueDateStart : new Date(0);
@@ -37,20 +32,38 @@ const initFlatpickr = (dateFields) => {
   });
 };
 
-const renderTripHeader = () => {
+const renderTripHeader = (tirpEvents) => {
   const siteHeaderContainer = document.querySelector(`.trip-main`);
   const menuContainer = siteHeaderContainer.querySelector(`.trip-controls`);
   const menuTitle = menuContainer.querySelector(`h2:last-child`);
-  const tripInfoComponent = new TripInfoComponent(tripDateStart, tirpDateEnd, routePoints);
+  const totalPrice = tirpEvents ? tirpEvents.reduce((acc, event) => acc + event.price, 0) : 0;
+  const tripInfoContainer = new InfoComponent().getElement();
 
-  render(siteHeaderContainer, tripInfoComponent.getElement(), RenderPosition.AFTERBEGIN);
+  render(siteHeaderContainer, tripInfoContainer, RenderPosition.AFTERBEGIN);
+  render(tripInfoContainer, new CostComponent(totalPrice).getElement(), RenderPosition.BEFOREEND);
   render(menuContainer, new MenuComponent().getElement(), RenderPosition.INSERTBEFORE, menuTitle);
   render(menuContainer, new FilterComponent(filters).getElement(), RenderPosition.BEFOREEND);
-  render(tripInfoComponent.getElement(), new CostComponent(totalPrice).getElement(), RenderPosition.BEFOREEND);
+
+  if (tirpEvents.length > 0) {
+    const eventsByDays = tirpEvents.slice().sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
+    const tripDateStart = eventsByDays[0].dueDateStart;
+    const tirpDateEnd = eventsByDays[eventsByDays.length - 1].dueDateEnd;
+    const routePoints = eventsByDays.map((item) => item.city);
+
+    const tripInfoComponent = new TripInfoComponent(tripDateStart, tirpDateEnd, routePoints);
+    render(siteHeaderContainer, tripInfoComponent.getElement(), RenderPosition.AFTERBEGIN);
+  }
 };
 
-const renderTripRoute = () => {
+const renderTripRoute = (tirpEvents) => {
   const tripEventsContainer = document.querySelector(`.trip-events`);
+
+  if (tirpEvents.length === 0) {
+    render(tripEventsContainer, new EventsEmptyComponent().getElement(), RenderPosition.BEFOREEND);
+    return;
+  }
+
+  const eventsByDays = tirpEvents.slice().sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
   const daysComponenet = new DaysComponent();
 
   render(tripEventsContainer, new SortComponent().getElement(), RenderPosition.BEFOREEND);
@@ -119,5 +132,5 @@ const renderEvent = (eventsList, event, index) => {
   render(eventsList, eventComponent.getElement(), RenderPosition.BEFOREEND);
 };
 
-renderTripHeader();
-renderTripRoute();
+renderTripHeader(events);
+renderTripRoute(events);
