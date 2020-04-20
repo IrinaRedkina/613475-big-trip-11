@@ -25,12 +25,10 @@ const createTripInfoTemplate = (tripDateStart, tripDateEnd, routePoints) => {
   const tripCities = cities.length > MAX_CITIES_IN_TITLE_COUNT ? getCitiesString(cities) : cities.join(` &mdash; `);
 
   return (
-    `<section class="trip-main__trip-info  trip-info">
-      <div class="trip-info__main">
-        <h1 class="trip-info__title">${tripCities}</h1>
-        <p class="trip-info__dates">${dateStart} ${dateEnd}</p>
-      </div>
-    </section>`
+    `<div class="trip-info__main">
+      <h1 class="trip-info__title">${tripCities}</h1>
+      <p class="trip-info__dates">${dateStart} ${dateEnd}</p>
+    </div>`
   );
 };
 
