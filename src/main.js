@@ -12,7 +12,7 @@ import EventsEmptyComponent from './components/events-empty';
 import {filters} from './mock/filter';
 import {generateEvents} from './mock/event';
 import {Key} from './utils/common';
-import {RenderPosition, render} from './utils/render';
+import {RenderPosition, render, replace} from './utils/render';
 
 import flatpickr from 'flatpickr';
 
@@ -38,13 +38,18 @@ const renderTripHeader = (tirpEvents) => {
   const siteHeaderContainer = document.querySelector(`.trip-main`);
   const menuContainer = siteHeaderContainer.querySelector(`.trip-controls`);
   const menuTitle = menuContainer.querySelector(`h2:last-child`);
-  const totalPrice = tirpEvents ? tirpEvents.reduce((acc, event) => acc + event.price, 0) : 0;
-  const tripInfoContainer = new InfoComponent().getElement();
 
-  render(siteHeaderContainer, tripInfoContainer, RenderPosition.AFTERBEGIN);
-  render(tripInfoContainer, new CostComponent(totalPrice).getElement(), RenderPosition.BEFOREEND);
-  render(menuContainer, new MenuComponent().getElement(), RenderPosition.INSERTBEFORE, menuTitle);
-  render(menuContainer, new FilterComponent(filters).getElement(), RenderPosition.BEFOREEND);
+  const totalPrice = tirpEvents ? tirpEvents.reduce((acc, event) => acc + event.price, 0) : 0;
+
+  const infoComponent = new InfoComponent();
+  const costComponent = new CostComponent(totalPrice);
+  const menuComponent = new MenuComponent();
+  const filterComponent = new FilterComponent(filters);
+
+  render(siteHeaderContainer, infoComponent, RenderPosition.AFTERBEGIN);
+  render(infoComponent.getElement(), costComponent, RenderPosition.BEFOREEND);
+  render(menuContainer, menuComponent, RenderPosition.INSERTBEFORE, menuTitle);
+  render(menuContainer, filterComponent, RenderPosition.BEFOREEND);
 
   if (tirpEvents.length > 0) {
     const eventsByDays = tirpEvents.slice().sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
@@ -53,7 +58,7 @@ const renderTripHeader = (tirpEvents) => {
     const routePoints = eventsByDays.map((item) => item.city);
 
     const tripInfoComponent = new TripInfoComponent(tripDateStart, tirpDateEnd, routePoints);
-    render(tripInfoContainer, tripInfoComponent.getElement(), RenderPosition.AFTERBEGIN);
+    render(infoComponent.getElement(), tripInfoComponent, RenderPosition.AFTERBEGIN);
   }
 };
 
@@ -61,15 +66,15 @@ const renderTripRoute = (tirpEvents) => {
   const tripEventsContainer = document.querySelector(`.trip-events`);
 
   if (tirpEvents.length === 0) {
-    render(tripEventsContainer, new EventsEmptyComponent().getElement(), RenderPosition.BEFOREEND);
+    render(tripEventsContainer, new EventsEmptyComponent(), RenderPosition.BEFOREEND);
     return;
   }
 
   const eventsByDays = tirpEvents.slice().sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
   const daysComponenet = new DaysComponent();
 
-  render(tripEventsContainer, new SortComponent().getElement(), RenderPosition.BEFOREEND);
-  render(tripEventsContainer, daysComponenet.getElement(), RenderPosition.BEFOREEND);
+  render(tripEventsContainer, new SortComponent(), RenderPosition.BEFOREEND);
+  render(tripEventsContainer, daysComponenet, RenderPosition.BEFOREEND);
 
   let dateCount = 1;
   let eventsList = daysComponenet.getElement().querySelector(`.trip-events__list--day-${dateCount}`);
@@ -79,7 +84,7 @@ const renderTripRoute = (tirpEvents) => {
     const prevDate = getPrevDate(items[i - 1]);
 
     if (currentDate.toDateString() !== prevDate.toDateString()) {
-      render(daysComponenet.getElement(), new DayComponent(dateCount, event.dueDateStart).getElement(), RenderPosition.BEFOREEND);
+      render(daysComponenet.getElement(), new DayComponent(dateCount, event.dueDateStart), RenderPosition.BEFOREEND);
       eventsList = daysComponenet.getElement().querySelector(`.trip-events__list--day-${dateCount}`);
       dateCount += 1;
     }
@@ -101,11 +106,11 @@ const renderEvent = (eventsList, event, index) => {
   initFlatpickr(dateFields);
 
   const replaceEventToEdit = () => {
-    eventsList.replaceChild(editEventComponent.getElement(), eventComponent.getElement());
+    replace(editEventComponent, eventComponent);
   };
 
   const replaceEditToTask = () => {
-    eventsList.replaceChild(eventComponent.getElement(), editEventComponent.getElement());
+    replace(eventComponent, editEventComponent);
   };
 
   const onEscKeyDown = (evt) => {
@@ -131,7 +136,7 @@ const renderEvent = (eventsList, event, index) => {
     document.removeEventListener(`keydown`, onEscKeyDown);
   });
 
-  render(eventsList, eventComponent.getElement(), RenderPosition.BEFOREEND);
+  render(eventsList, eventComponent, RenderPosition.BEFOREEND);
 };
 
 renderTripHeader(events);
