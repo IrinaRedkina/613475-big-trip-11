@@ -14,24 +14,11 @@ import {generateEvents} from './mock/event';
 import {Key} from './utils/common';
 import {RenderPosition, render, replace} from './utils/render';
 
-import flatpickr from 'flatpickr';
-
 const TRIP_EVENT_COUNT = 5;
-const INPUT_DATE_FORMAT = `d/m/y H:i`;
 const events = generateEvents(TRIP_EVENT_COUNT);
 
 const getPrevDate = (prevEvent) => {
   return prevEvent ? prevEvent.dueDateStart : new Date(0);
-};
-
-const initFlatpickr = (dateFields) => {
-  dateFields.forEach((field) => {
-    flatpickr(field, {
-      enableTime: true,
-      dateFormat: INPUT_DATE_FORMAT,
-      defaultDate: new Date(field.value)
-    });
-  });
 };
 
 const renderTripHeader = (tirpEvents) => {
@@ -41,15 +28,10 @@ const renderTripHeader = (tirpEvents) => {
 
   const totalPrice = tirpEvents ? tirpEvents.reduce((acc, event) => acc + event.price, 0) : 0;
 
-  const infoComponent = new InfoComponent();
-  const costComponent = new CostComponent(totalPrice);
-  const menuComponent = new MenuComponent();
-  const filterComponent = new FilterComponent(filters);
-
-  render(siteHeaderContainer, infoComponent, RenderPosition.AFTERBEGIN);
-  render(infoComponent.getElement(), costComponent, RenderPosition.BEFOREEND);
-  render(menuContainer, menuComponent, RenderPosition.INSERTBEFORE, menuTitle);
-  render(menuContainer, filterComponent, RenderPosition.BEFOREEND);
+  render(siteHeaderContainer, new InfoComponent(), RenderPosition.AFTERBEGIN);
+  render(new InfoComponent().getElement(), new CostComponent(totalPrice), RenderPosition.BEFOREEND);
+  render(menuContainer, new MenuComponent(), RenderPosition.INSERTBEFORE, menuTitle);
+  render(menuContainer, new FilterComponent(filters), RenderPosition.BEFOREEND);
 
   if (tirpEvents.length > 0) {
     const eventsByDays = tirpEvents.slice().sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
@@ -58,7 +40,7 @@ const renderTripHeader = (tirpEvents) => {
     const routePoints = eventsByDays.map((item) => item.city);
 
     const tripInfoComponent = new TripInfoComponent(tripDateStart, tirpDateEnd, routePoints);
-    render(infoComponent.getElement(), tripInfoComponent, RenderPosition.AFTERBEGIN);
+    render(new InfoComponent().getElement(), tripInfoComponent, RenderPosition.AFTERBEGIN);
   }
 };
 
@@ -97,13 +79,7 @@ const renderEvent = (eventsList, event, index) => {
   const eventComponent = new EventComponent(event, index);
   const editEventComponent = new EditEventComponent(event, index);
 
-  const editEventOpen = eventComponent.getElement().querySelector(`.event__rollup-btn`);
-  const editEventClose = editEventComponent.getElement().querySelector(`.event__rollup-btn`);
-
-  const eventForm = editEventComponent.getElement().querySelector(`form`);
-  const dateFields = editEventComponent.getElement().querySelectorAll(`.event__input--time`);
-
-  initFlatpickr(dateFields);
+  editEventComponent.initDateInput();
 
   const replaceEventToEdit = () => {
     replace(editEventComponent, eventComponent);
@@ -120,17 +96,17 @@ const renderEvent = (eventsList, event, index) => {
     }
   };
 
-  editEventOpen.addEventListener(`click`, () => {
+  eventComponent.setClickEditButtonHandler(() => {
     replaceEventToEdit();
     document.addEventListener(`keydown`, onEscKeyDown);
   });
 
-  editEventClose.addEventListener(`click`, () => {
+  editEventComponent.setClickEditButtonCloseHandler(() => {
     replaceEditToTask();
     document.removeEventListener(`keydown`, onEscKeyDown);
   });
 
-  eventForm.addEventListener(`submit`, (evt) => {
+  editEventComponent.setSubmitEditFormHandler((evt) => {
     evt.preventDefault();
     replaceEditToTask();
     document.removeEventListener(`keydown`, onEscKeyDown);

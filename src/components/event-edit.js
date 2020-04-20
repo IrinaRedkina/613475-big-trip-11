@@ -1,10 +1,12 @@
 import {toUpperCaseFirstLetter} from '../utils/common';
 import AbstractComponent from './abstract-component';
 import {types, getDefaultEvent} from '../mock/event';
-
 import {createTypeListMarkup} from './event-type-markup';
 import {createOffersMarkup} from './event-offer-markup';
 import {createCitiesMarkup, createDestinationMarkup} from './event-destination-markup';
+import flatpickr from 'flatpickr';
+
+const INPUT_DATE_FORMAT = `d/m/y H:i`;
 
 const createFavoriteMarkup = (isFavorite, idEvent) => {
   return (
@@ -123,5 +125,27 @@ export default class EditEvent extends AbstractComponent {
 
   getTemplate() {
     return createEditEventTemplate(this._event, this._id);
+  }
+
+  setClickEditButtonCloseHandler(handler) {
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
+      handler();
+    });
+  }
+
+  setSubmitEditFormHandler(handler) {
+    this.getElement().querySelector(`form`).addEventListener(`submit`, () => {
+      handler();
+    });
+  }
+
+  initDateInput() {
+    this.getElement().querySelectorAll(`.event__input--time`).forEach((field) => {
+      flatpickr(field, {
+        enableTime: true,
+        dateFormat: INPUT_DATE_FORMAT,
+        defaultDate: new Date(field.value)
+      });
+    });
   }
 }
