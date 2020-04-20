@@ -51,7 +51,7 @@ const renderTripHeader = (tirpEvents) => {
     const routePoints = eventsByDays.map((item) => item.city);
 
     const tripInfoComponent = new TripInfoComponent(tripDateStart, tirpDateEnd, routePoints);
-    render(siteHeaderContainer, tripInfoComponent.getElement(), RenderPosition.AFTERBEGIN);
+    render(tripInfoContainer, tripInfoComponent.getElement(), RenderPosition.AFTERBEGIN);
   }
 };
 
