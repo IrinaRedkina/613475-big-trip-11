@@ -1,34 +1,47 @@
 import {MONTH} from './const';
 
-const toUpperCaseFirstLetter = (string) => {
+export const RenderPosition = {
+  AFTERBEGIN: `afterBegin`,
+  BEFOREEND: `beforeEnd`,
+  INSERTBEFORE: `insertBefore`
+};
+
+export const Key = {
+  ENTER: `Enter`,
+  ESC: `Escape`,
+  ESC_SHORT: `Esc`,
+  MOUSE_LEFT: 0
+};
+
+export const toUpperCaseFirstLetter = (string) => {
   return `${string[0].toUpperCase() + string.substring(1)}`;
 };
 
-const getRandomElement = (array) => {
+export const getRandomElement = (array) => {
   const index = Math.floor(Math.random() * array.length);
   return array[index];
 };
 
-const getRandomNumber = (min, max) => {
+export const getRandomNumber = (min, max) => {
   return Math.floor(min + Math.random() * (max - min + 1));
 };
 
-const getRandomLengthArray = (array) => {
+export const getRandomLengthArray = (array) => {
   return array.filter(() => Math.random() > 0.5);
 };
 
-const castFormat = (value) => {
+export const castFormat = (value) => {
   return value < 10 ? `0${value}` : String(value);
 };
 
-const formatTime = (date) => {
+export const formatTime = (date) => {
   const hours = castFormat(date.getHours());
   const minutes = castFormat(date.getMinutes());
 
   return `${hours}:${minutes}`;
 };
 
-const formatDate = (date, format = `Y-m-d`) => {
+export const formatDate = (date, format = `Y-m-d`) => {
   const fullYear = date.getFullYear();
   const year = String(fullYear).substring(2);
   const monthInNumber = castFormat(date.getMonth() + 1);
@@ -43,7 +56,7 @@ const formatDate = (date, format = `Y-m-d`) => {
     .replace(`d`, day);
 };
 
-const getTimeInterval = (dateStart, dateEnd) => {
+export const getTimeInterval = (dateStart, dateEnd) => {
   const diff = dateEnd - dateStart;
 
   const dayInMs = 1000 * 60 * 60 * 24;
@@ -65,12 +78,23 @@ const getTimeInterval = (dateStart, dateEnd) => {
   return `${daysStr} ${hoursStr} ${minutesStr}`;
 };
 
-export {
-  toUpperCaseFirstLetter,
-  getRandomElement,
-  getRandomNumber,
-  getRandomLengthArray,
-  formatTime,
-  formatDate,
-  getTimeInterval
+export const createElement = (template) => {
+  const newElement = document.createElement(`div`);
+  newElement.innerHTML = template;
+
+  return newElement.firstChild;
+};
+
+export const render = (container, element, place, referenceElement) => {
+  switch (place) {
+    case RenderPosition.AFTERBEGIN:
+      container.prepend(element);
+      break;
+    case RenderPosition.BEFOREEND:
+      container.append(element);
+      break;
+    case RenderPosition.INSERTBEFORE:
+      container.insertBefore(element, referenceElement);
+      break;
+  }
 };

@@ -1,13 +1,15 @@
-import {createTripInfoTemplate} from './components/trip-info';
-import {createCostTemplate} from './components/cost';
-import {createMenuTemplate} from './components/menu';
+import TripInfoComponent from './components/trip-info';
+import CostComponent from './components/cost';
+import MenuComponent from './components/menu';
+import FilterComponent from './components/filter';
+import SortComponent from './components/sort';
+import DaysComponent from './components/days';
+import DayComponent from './components/day';
+import EventComponent from './components/event';
+import EditEventComponent from './components/event-edit';
 import {filters} from './mock/filter';
-import {createFilterTemplate} from './components/filter';
 import {generateEvents} from './mock/event';
-import {createSortTemplate} from './components/sort';
-import {createDaysTemplate} from './components/days';
-import {createEventTemplate} from './components/event';
-import {createEditEventTemplate} from './components/event-edit';
+import {render, RenderPosition} from './util';
 import flatpickr from 'flatpickr';
 
 const TRIP_EVENT_COUNT = 5;
@@ -21,104 +23,91 @@ const tripDateStart = eventsByDays[0].dueDateStart;
 const tirpDateEnd = eventsByDays[eventsByDays.length - 1].dueDateEnd;
 const routePoints = eventsByDays.map((item) => item.city);
 
-const renderElement = (container, template, place) => {
-  container.insertAdjacentHTML(place, template);
-};
-
-const tripMainContainer = document.querySelector(`.trip-main`);
-renderElement(tripMainContainer, createTripInfoTemplate(tripDateStart, tirpDateEnd, routePoints), `afterBegin`);
-
-const menuContainer = tripMainContainer.querySelector(`.trip-controls`);
-const menuTitle = tripMainContainer.querySelector(`h2:first-child`);
-const tripInfoContainer = tripMainContainer.querySelector(`.trip-info`);
-const tripEventsContainer = document.querySelector(`.trip-events`);
-
-renderElement(tripInfoContainer, createCostTemplate(totalPrice), `beforeEnd`);
-renderElement(menuTitle, createMenuTemplate(), `afterEnd`);
-renderElement(menuContainer, createFilterTemplate(filters), `beforeEnd`);
-renderElement(tripEventsContainer, createSortTemplate(), `beforeEnd`);
-
-
-/*
- * render events by days
- */
-const tripDayList = document.querySelector(`.trip-days`);
-let dateCount = 1;
-let eventList = tripDayList.querySelector(`.trip-events__list--day-${dateCount}`);
-
 const getPrevDate = (prevEvent) => {
   return prevEvent ? prevEvent.dueDateStart : new Date(0);
 };
 
-eventsByDays.forEach((day, i, items) => {
-  const currentDate = day.dueDateStart;
-  const prevDate = getPrevDate(items[i - 1]);
-
-  if (currentDate.toDateString() !== prevDate.toDateString()) {
-    renderElement(tripDayList, createDaysTemplate(dateCount, day.dueDateStart), `beforeEnd`);
-    eventList = tripDayList.querySelector(`.trip-events__list--day-${dateCount}`);
-    dateCount += 1;
-  }
-
-  renderElement(eventList, createEventTemplate(day, i), `beforeEnd`);
-});
-
-
-/*
- * open/close edit events
- */
-const initFlatpickr = (selectDateInputs) => {
-  selectDateInputs.forEach((item) => {
-    flatpickr(item, {
+const initFlatpickr = (dateFields) => {
+  dateFields.forEach((field) => {
+    flatpickr(field, {
       enableTime: true,
       dateFormat: INPUT_DATE_FORMAT,
-      defaultDate: new Date(item.value)
+      defaultDate: new Date(field.value)
     });
   });
 };
 
-const closeAtherEventEdit = () => {
-  const eventEdit = tripDayList.querySelector(`.event--edit`);
-  if (eventEdit !== null) {
-    closeEventEdit(eventEdit.closest(`.trip-events__item`));
-  }
+const renderTripHeader = () => {
+  const siteHeaderContainer = document.querySelector(`.trip-main`);
+  const menuContainer = siteHeaderContainer.querySelector(`.trip-controls`);
+  const menuTitle = menuContainer.querySelector(`h2:last-child`);
+  const tripInfoComponent = new TripInfoComponent(tripDateStart, tirpDateEnd, routePoints);
+
+  render(siteHeaderContainer, tripInfoComponent.getElement(), RenderPosition.AFTERBEGIN);
+  render(menuContainer, new MenuComponent().getElement(), RenderPosition.INSERTBEFORE, menuTitle);
+  render(menuContainer, new FilterComponent(filters).getElement(), RenderPosition.BEFOREEND);
+  render(tripInfoComponent.getElement(), new CostComponent(totalPrice).getElement(), RenderPosition.BEFOREEND);
 };
 
-const openEventEdit = (eventItem) => {
-  const eventId = eventItem.getAttribute(`data-id`);
+const renderTripRoute = () => {
+  const tripEventsContainer = document.querySelector(`.trip-events`);
+  const daysComponenet = new DaysComponent();
 
-  closeAtherEventEdit();
+  render(tripEventsContainer, new SortComponent().getElement(), RenderPosition.BEFOREEND);
+  render(tripEventsContainer, daysComponenet.getElement(), RenderPosition.BEFOREEND);
 
-  eventItem.querySelector(`.event`).remove();
-  renderElement(eventItem, createEditEventTemplate(eventsByDays[eventId], eventId, false), `beforeEnd`);
+  let dateCount = 1;
+  let eventsList = daysComponenet.getElement().querySelector(`.trip-events__list--day-${dateCount}`);
 
-  const selectDateInputs = eventItem.querySelectorAll(`.event__input--time`);
-  initFlatpickr(selectDateInputs);
+  eventsByDays.forEach((event, i, items) => {
+    const currentDate = event.dueDateStart;
+    const prevDate = getPrevDate(items[i - 1]);
 
-  const coordTop = eventItem.offsetTop + document.querySelector(`.page-header`).clientHeight;
-  window.scroll(0, coordTop);
+    if (currentDate.toDateString() !== prevDate.toDateString()) {
+      render(daysComponenet.getElement(), new DayComponent(dateCount, event.dueDateStart).getElement(), RenderPosition.BEFOREEND);
+      eventsList = daysComponenet.getElement().querySelector(`.trip-events__list--day-${dateCount}`);
+      dateCount += 1;
+    }
+
+    renderEvent(eventsList, event, i);
+  });
 };
 
-const closeEventEdit = (eventItem) => {
-  const eventId = eventItem.getAttribute(`data-id`);
+const renderEvent = (eventsList, event, index) => {
+  const eventComponent = new EventComponent(event, index);
+  const editEventComponent = new EditEventComponent(event, index);
 
-  eventItem.querySelector(`.event--edit`).remove();
-  renderElement(eventItem, createEventTemplate(eventsByDays[eventId], eventId, false), `beforeEnd`);
+  const editEventOpen = eventComponent.getElement().querySelector(`.event__rollup-btn`);
+  const editEventClose = editEventComponent.getElement().querySelector(`.event__rollup-btn`);
+
+  const eventForm = editEventComponent.getElement().querySelector(`form`);
+  const dateFields = editEventComponent.getElement().querySelectorAll(`.event__input--time`);
+
+  initFlatpickr(dateFields);
+
+  const replaceEventToEdit = () => {
+    eventsList.replaceChild(editEventComponent.getElement(), eventComponent.getElement());
+  };
+
+  const replaceEditToTask = () => {
+    eventsList.replaceChild(eventComponent.getElement(), editEventComponent.getElement());
+  };
+
+  editEventOpen.addEventListener(`click`, () => {
+    replaceEventToEdit();
+  });
+
+  editEventClose.addEventListener(`click`, () => {
+    replaceEditToTask();
+  });
+
+  eventForm.addEventListener(`submit`, (evt) => {
+    evt.preventDefault();
+    replaceEditToTask();
+  });
+
+  render(eventsList, eventComponent.getElement(), RenderPosition.BEFOREEND);
 };
 
-tripDayList.addEventListener(`click`, (evt) => {
-  const targetClass = `event__rollup-btn`;
-
-  if (targetClass !== evt.target.getAttribute(`class`)) {
-    return;
-  }
-
-  const eventItem = evt.target.closest(`.trip-events__item`);
-  const isEventForm = !!evt.target.closest(`.event--edit`);
-
-  if (!isEventForm) {
-    openEventEdit(eventItem);
-  } else {
-    closeEventEdit(eventItem);
-  }
-});
+renderTripHeader();
+renderTripRoute();

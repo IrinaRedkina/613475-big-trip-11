@@ -1,4 +1,4 @@
-import {toUpperCaseFirstLetter, formatTime, formatDate, getTimeInterval} from '../util';
+import {createElement, toUpperCaseFirstLetter, formatTime, formatDate, getTimeInterval} from '../util';
 import {types} from '../mock/event';
 
 const MAX_LENGTH_TITLE = 17;
@@ -17,7 +17,7 @@ const createOfferMarkup = (option) => {
   );
 };
 
-const createEventTemplate = (event, idEvent, isWithContainer = true) => {
+const createEventTemplate = (event, idEvent) => {
   const {type, city, price, options, selectedOptions, dueDateStart, dueDateEnd} = event;
 
   const typeData = types[type];
@@ -37,7 +37,7 @@ const createEventTemplate = (event, idEvent, isWithContainer = true) => {
     .join(`\n`) : ``;
 
   return (
-    `${isWithContainer ? `<li class="trip-events__item" data-id="${idEvent}">` : ``}
+    `<li class="trip-events__item" data-id="${idEvent}">
       <div class="event">
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
@@ -68,8 +68,30 @@ const createEventTemplate = (event, idEvent, isWithContainer = true) => {
           <span class="visually-hidden">Open event</span>
         </button>
       </div>
-    ${isWithContainer ? `</li>` : ``}`
+    </li>`
   );
 };
 
-export {createEventTemplate};
+export default class EventComponent {
+  constructor(event, id) {
+    this._event = event;
+    this._id = id;
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createEventTemplate(this._event, this._id);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}

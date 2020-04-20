@@ -1,8 +1,8 @@
-import {toUpperCaseFirstLetter} from '../util';
+import {toUpperCaseFirstLetter, createElement} from '../util';
 import {types, getDefaultEvent} from '../mock/event';
-import {createTypeListMarkup} from './event-type';
-import {createOffersMarkup} from './event-offer';
-import {createCitiesMarkup, createDestinationMarkup} from './event-destination';
+import {createTypeListMarkup} from './event-type-markup';
+import {createOffersMarkup} from './event-offer-markup';
+import {createCitiesMarkup, createDestinationMarkup} from './event-destination-markup';
 
 const createFavoriteMarkup = (isFavorite, idEvent) => {
   return (
@@ -32,7 +32,7 @@ const createDateTimeMarkup = (startDate, endDate, idEvent) => {
   );
 };
 
-const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0, isWithContainer = true) => {
+const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0) => {
   const {type, city, price, destination, options, selectedOptions, isFavorite, dueDateStart, dueDateEnd} = event;
 
   const isShowingDestination = destination && (destination.description.length > 0 || destination.photos.length) > 0 ? true : false;
@@ -43,7 +43,7 @@ const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0, isWithC
   const title = `${toUpperCaseFirstLetter(type)} ${typeData[`placeholder`]}`;
 
   return (
-    `${isWithContainer ? `<li class="trip-events__item" data-id="${idEvent}">` : ``}
+    `<li class="trip-events__item" data-id="${idEvent}">
       <form class="event  event--edit" action="#" method="post">
         <header class="event__header">
 
@@ -106,8 +106,31 @@ const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0, isWithC
         </section>
         ` : ``}
       </form>
-    ${isWithContainer ? `</li>` : ``}`
+    </li>`
   );
 };
 
-export {createEditEventTemplate};
+
+export default class EditEventComponent {
+  constructor(event, id) {
+    this._event = event;
+    this._id = id;
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createEditEventTemplate(this._event, this._id);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}

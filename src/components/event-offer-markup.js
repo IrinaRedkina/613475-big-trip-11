@@ -19,7 +19,7 @@ const createOfferMarkup = (option, isSelected, idEvent) => {
   );
 };
 
-const createOffersMarkup = (options, selectedOptions, idEvent) => {
+export const createOffersMarkup = (options, selectedOptions, idEvent) => {
   const offersMarkup = options
     .map((option) => createOfferMarkup(option, selectedOptions[option.id], idEvent))
     .join(`\n`);
@@ -33,5 +33,3 @@ const createOffersMarkup = (options, selectedOptions, idEvent) => {
     </section>`
   );
 };
-
-export {createOffersMarkup};

@@ -1,12 +1,12 @@
 import {cities} from '../mock/destination';
 
-const createCitiesMarkup = () => {
+export const createCitiesMarkup = () => {
   return cities
     .map((city) => `<option value="${city}"></option>`)
     .join(`\n`);
 };
 
-const createDestinationMarkup = (destination) => {
+export const createDestinationMarkup = (destination) => {
   const {description, photos} = destination;
 
   const photosMarkup = photos
@@ -33,5 +33,3 @@ const createDestinationMarkup = (destination) => {
     </section>`
   );
 };
-
-export {createCitiesMarkup, createDestinationMarkup};
