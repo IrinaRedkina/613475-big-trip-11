@@ -11,8 +11,6 @@ const createDayTemplate = (count, date) => {
         <span class="day__counter">${count}</span>
         <time class="day__date" datetime="${fullDate}">${shortDate}</time>
       </div>
-
-      <ul class="trip-events__list trip-events__list--day-${count}"></ul>
     </li>`
   );
 };

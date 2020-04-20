@@ -134,8 +134,8 @@ export default class EditEvent extends AbstractComponent {
   }
 
   setSubmitEditFormHandler(handler) {
-    this.getElement().querySelector(`form`).addEventListener(`submit`, () => {
-      handler();
+    this.getElement().querySelector(`form`).addEventListener(`submit`, (evt) => {
+      handler(evt);
     });
   }
 

@@ -1,15 +1,12 @@
 import SortComponent from '../components/sort';
 import DaysComponent from '../components/days';
 import DayComponent from '../components/day';
+import DayListComponent from '../components/day-list';
 import EventComponent from '../components/event';
 import EditEventComponent from '../components/event-edit';
 import EventsEmptyComponent from '../components/events-empty';
 import {Key} from '../utils/common';
 import {RenderPosition, render, replace} from '../utils/render';
-
-const getPrevDate = (prevEvent) => {
-  return prevEvent ? prevEvent.dueDateStart : new Date(0);
-};
 
 const renderEvent = (eventsList, event, index) => {
   const eventComponent = new EventComponent(event, index);
@@ -51,6 +48,33 @@ const renderEvent = (eventsList, event, index) => {
   render(eventsList, eventComponent, RenderPosition.BEFOREEND);
 };
 
+const getPrevDate = (prevEvent) => {
+  return prevEvent ? prevEvent.dueDateStart : new Date(0);
+};
+
+const renderEvents = (events, container) => {
+  let dateCount = 1;
+  let eventsList = null;
+
+  events.forEach((event, i, items) => {
+    const currentDate = event.dueDateStart;
+    const prevDate = getPrevDate(items[i - 1]);
+
+    if (currentDate.toDateString() !== prevDate.toDateString()) {
+      const dayComponent = new DayComponent(dateCount, event.dueDateStart);
+      const dayListComponent = new DayListComponent(dateCount);
+
+      render(container, dayComponent, RenderPosition.BEFOREEND);
+      render(dayComponent.getElement(), dayListComponent, RenderPosition.BEFOREEND);
+
+      eventsList = dayListComponent.getElement();
+      dateCount += 1;
+    }
+
+    renderEvent(eventsList, event, i);
+  });
+};
+
 export default class TripController {
   constructor(container) {
     this._container = container;
@@ -62,7 +86,6 @@ export default class TripController {
 
   render(events) {
     const container = this._container;
-    const dayElement = this._daysComponent.getElement();
 
     if (events.length === 0) {
       render(container, this._eventsEmptyComponent, RenderPosition.BEFOREEND);
@@ -75,20 +98,6 @@ export default class TripController {
     const eventsByDays = events.slice()
       .sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
 
-    let dateCount = 1;
-    let eventsList = dayElement.querySelector(`.trip-events__list--day-${dateCount}`);
-
-    eventsByDays.forEach((event, i, items) => {
-      const currentDate = event.dueDateStart;
-      const prevDate = getPrevDate(items[i - 1]);
-
-      if (currentDate.toDateString() !== prevDate.toDateString()) {
-        render(dayElement, new DayComponent(dateCount, event.dueDateStart), RenderPosition.BEFOREEND);
-        eventsList = dayElement.querySelector(`.trip-events__list--day-${dateCount}`);
-        dateCount += 1;
-      }
-
-      renderEvent(eventsList, event, i);
-    });
+    renderEvents(eventsByDays, this._daysComponent.getElement());
   }
 }
