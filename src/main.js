@@ -11,7 +11,9 @@ import EditEventComponent from './components/event-edit';
 import EventsEmptyComponent from './components/events-empty';
 import {filters} from './mock/filter';
 import {generateEvents} from './mock/event';
-import {render, RenderPosition, Key} from './util';
+import {Key} from './utils/common';
+import {RenderPosition, render} from './utils/render';
+
 import flatpickr from 'flatpickr';
 
 const TRIP_EVENT_COUNT = 5;

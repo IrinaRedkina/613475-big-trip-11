@@ -1,4 +1,5 @@
-import {formatDate, createElement} from '../util';
+import {formatDate} from '../utils/date';
+import AbstractComponent from './abstract-component';
 
 const MAX_CITIES_IN_TITLE_COUNT = 3;
 const CITIES_SEPARATION = `...`;
@@ -32,27 +33,16 @@ const createTripInfoTemplate = (tripDateStart, tripDateEnd, routePoints) => {
   );
 };
 
-export default class TripInfoComponent {
+export default class TripInfo extends AbstractComponent {
   constructor(dateStart, dateEnd, routePoints) {
+    super();
+
     this._dateStart = dateStart;
     this._dateEnd = dateEnd;
     this._routePoints = routePoints;
-    this._element = null;
   }
 
   getTemplate() {
     return createTripInfoTemplate(this._dateStart, this._dateEnd, this._routePoints);
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }

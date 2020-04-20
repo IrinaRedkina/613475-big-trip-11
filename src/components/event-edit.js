@@ -1,5 +1,7 @@
-import {toUpperCaseFirstLetter, createElement} from '../util';
+import {toUpperCaseFirstLetter} from '../utils/common';
+import AbstractComponent from './abstract-component';
 import {types, getDefaultEvent} from '../mock/event';
+
 import {createTypeListMarkup} from './event-type-markup';
 import {createOffersMarkup} from './event-offer-markup';
 import {createCitiesMarkup, createDestinationMarkup} from './event-destination-markup';
@@ -111,26 +113,15 @@ const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0) => {
 };
 
 
-export default class EditEventComponent {
+export default class EditEvent extends AbstractComponent {
   constructor(event, id) {
+    super();
+
     this._event = event;
     this._id = id;
-    this._element = null;
   }
 
   getTemplate() {
     return createEditEventTemplate(this._event, this._id);
-  }
-
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }

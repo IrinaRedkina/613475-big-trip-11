@@ -1,34 +1,4 @@
-import {MONTH} from './const';
-
-export const RenderPosition = {
-  AFTERBEGIN: `afterBegin`,
-  BEFOREEND: `beforeEnd`,
-  INSERTBEFORE: `insertBefore`
-};
-
-export const Key = {
-  ENTER: `Enter`,
-  ESC: `Escape`,
-  ESC_SHORT: `Esc`,
-  MOUSE_LEFT: 0
-};
-
-export const toUpperCaseFirstLetter = (string) => {
-  return `${string[0].toUpperCase() + string.substring(1)}`;
-};
-
-export const getRandomElement = (array) => {
-  const index = Math.floor(Math.random() * array.length);
-  return array[index];
-};
-
-export const getRandomNumber = (min, max) => {
-  return Math.floor(min + Math.random() * (max - min + 1));
-};
-
-export const getRandomLengthArray = (array) => {
-  return array.filter(() => Math.random() > 0.5);
-};
+import {MONTH} from '../const';
 
 export const castFormat = (value) => {
   return value < 10 ? `0${value}` : String(value);
@@ -76,25 +46,4 @@ export const getTimeInterval = (dateStart, dateEnd) => {
   const minutesStr = minutes > 0 ? `${castFormat(minutes)}M` : ``;
 
   return `${daysStr} ${hoursStr} ${minutesStr}`;
-};
-
-export const createElement = (template) => {
-  const newElement = document.createElement(`div`);
-  newElement.innerHTML = template;
-
-  return newElement.firstChild;
-};
-
-export const render = (container, element, place, referenceElement) => {
-  switch (place) {
-    case RenderPosition.AFTERBEGIN:
-      container.prepend(element);
-      break;
-    case RenderPosition.BEFOREEND:
-      container.append(element);
-      break;
-    case RenderPosition.INSERTBEFORE:
-      container.insertBefore(element, referenceElement);
-      break;
-  }
 };
