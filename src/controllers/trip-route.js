@@ -14,34 +14,26 @@ const renderEvent = (eventsList, event, index) => {
 
   editEventComponent.initDateInput();
 
-  const replaceEventToEdit = () => {
-    replace(editEventComponent, eventComponent);
-  };
-
-  const replaceEditToTask = () => {
-    replace(eventComponent, editEventComponent);
-  };
-
   const onEscKeyDown = (evt) => {
     if (evt.key === Key.ESC || evt.key === Key.ESC_SHORT) {
-      replaceEditToTask();
+      replace(eventComponent, editEventComponent);
       document.removeEventListener(`keydown`, onEscKeyDown);
     }
   };
 
   eventComponent.setClickEditButtonHandler(() => {
-    replaceEventToEdit();
+    replace(editEventComponent, eventComponent);
     document.addEventListener(`keydown`, onEscKeyDown);
   });
 
   editEventComponent.setClickEditButtonCloseHandler(() => {
-    replaceEditToTask();
+    replace(eventComponent, editEventComponent);
     document.removeEventListener(`keydown`, onEscKeyDown);
   });
 
   editEventComponent.setSubmitEditFormHandler((evt) => {
     evt.preventDefault();
-    replaceEditToTask();
+    replace(eventComponent, editEventComponent);
     document.removeEventListener(`keydown`, onEscKeyDown);
   });
 
