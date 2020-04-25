@@ -1,8 +1,12 @@
-import {toUpperCaseFirstLetter, createElement} from '../util';
+import {toUpperCaseFirstLetter} from '../utils/common';
+import AbstractComponent from './abstract-component';
 import {types, getDefaultEvent} from '../mock/event';
 import {createTypeListMarkup} from './event-type-markup';
 import {createOffersMarkup} from './event-offer-markup';
 import {createCitiesMarkup, createDestinationMarkup} from './event-destination-markup';
+import flatpickr from 'flatpickr';
+
+const INPUT_DATE_FORMAT = `d/m/y H:i`;
 
 const createFavoriteMarkup = (isFavorite, idEvent) => {
   return (
@@ -111,26 +115,37 @@ const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0) => {
 };
 
 
-export default class EditEventComponent {
+export default class EditEvent extends AbstractComponent {
   constructor(event, id) {
+    super();
+
     this._event = event;
     this._id = id;
-    this._element = null;
   }
 
   getTemplate() {
     return createEditEventTemplate(this._event, this._id);
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
+  setClickEditButtonCloseHandler(handler) {
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
+      handler();
+    });
   }
 
-  removeElement() {
-    this._element = null;
+  setSubmitEditFormHandler(handler) {
+    this.getElement().querySelector(`form`).addEventListener(`submit`, (evt) => {
+      handler(evt);
+    });
+  }
+
+  initDateInput() {
+    this.getElement().querySelectorAll(`.event__input--time`).forEach((field) => {
+      flatpickr(field, {
+        enableTime: true,
+        dateFormat: INPUT_DATE_FORMAT,
+        defaultDate: new Date(field.value)
+      });
+    });
   }
 }

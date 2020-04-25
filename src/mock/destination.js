@@ -1,4 +1,4 @@
-import {getRandomNumber, getRandomLengthArray} from '../util';
+import {getRandomNumber, getRandomLengthArray} from '../utils/common';
 
 const cities = [`Amsterdam`, `Geneva`, `Chamonix`, `Paris`, `Helsinki`, `Oslo`, `Tokyo`, `Berlin`, `Hong Kong`, `Ottawa`, `London`, `Pyongyang`];
 const descriptions = [

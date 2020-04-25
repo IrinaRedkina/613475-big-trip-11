@@ -1,4 +1,4 @@
-import {getRandomNumber, getRandomElement} from '../util';
+import {getRandomNumber, getRandomElement} from '../utils/common';
 import {cities, generateDestinations} from './destination';
 import {offers} from './offer';
 

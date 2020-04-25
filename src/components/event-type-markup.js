@@ -1,5 +1,5 @@
 import {types, typeList} from '../mock/event';
-import {toUpperCaseFirstLetter} from "../util";
+import {toUpperCaseFirstLetter} from "../utils/common";
 
 const createTypeMarkup = (typeName, isSelected, idEvent) => {
   return (

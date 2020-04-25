@@ -1,5 +1,7 @@
-import {createElement, toUpperCaseFirstLetter, formatTime, formatDate, getTimeInterval} from '../util';
+import {formatTime, formatDate, getTimeInterval} from '../utils/date';
+import {toUpperCaseFirstLetter} from '../utils/common';
 import {types} from '../mock/event';
+import AbstractComponent from './abstract-component';
 
 const MAX_LENGTH_TITLE = 17;
 const MAX_COUNT_OPTIONS = 3;
@@ -72,26 +74,21 @@ const createEventTemplate = (event, idEvent) => {
   );
 };
 
-export default class EventComponent {
+export default class Event extends AbstractComponent {
   constructor(event, id) {
+    super();
+
     this._event = event;
     this._id = id;
-    this._element = null;
   }
 
   getTemplate() {
     return createEventTemplate(this._event, this._id);
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
+  setClickEditButtonHandler(handler) {
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
+      handler();
+    });
   }
 }
