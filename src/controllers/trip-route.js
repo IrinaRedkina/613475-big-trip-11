@@ -1,4 +1,5 @@
 import SortComponent from '../components/sort';
+import {SortType} from '../components/sort';
 import DaysComponent from '../components/days';
 import DayComponent from '../components/day';
 import DayListComponent from '../components/day-list';
@@ -44,7 +45,7 @@ const getPrevDate = (prevEvent) => {
   return prevEvent ? prevEvent.dueDateStart : new Date(0);
 };
 
-const renderEvents = (events, container) => {
+const renderEventsByDays = (events, container) => {
   let dateCount = 1;
   let eventsList = null;
 
@@ -67,6 +68,39 @@ const renderEvents = (events, container) => {
   });
 };
 
+const renderEvents = (events, container) => {
+  const dayComponent = new DayComponent();
+  const dayListComponent = new DayListComponent();
+
+  render(container, dayComponent, RenderPosition.BEFOREEND);
+  render(dayComponent.getElement(), dayListComponent, RenderPosition.BEFOREEND);
+
+  const eventsList = dayListComponent.getElement();
+
+  events.forEach((event, i) => {
+    renderEvent(eventsList, event, i);
+  });
+};
+
+const getSortedEvents = (events, sortType) => {
+  let sortedEvents = [];
+  const showingEvents = events.slice();
+
+  switch (sortType) {
+    case SortType.TIME:
+      sortedEvents = showingEvents.sort((a, b) => (a.dueDateStart - a.dueDateEnd) - (b.dueDateStart - b.dueDateEnd));
+      break;
+    case SortType.PRICE:
+      sortedEvents = showingEvents.sort((a, b) => b.price - a.price);
+      break;
+    case SortType.DEFAULT:
+      sortedEvents = showingEvents.sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
+      break;
+  }
+
+  return sortedEvents;
+};
+
 export default class TripController {
   constructor(container) {
     this._container = container;
@@ -87,9 +121,20 @@ export default class TripController {
     render(container, this._sortComponent, RenderPosition.BEFOREEND);
     render(container, this._daysComponent, RenderPosition.BEFOREEND);
 
-    const eventsByDays = events.slice()
-      .sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
+    const eventsByDays = getSortedEvents(events, SortType.DEFAULT);
 
-    renderEvents(eventsByDays, this._daysComponent.getElement());
+    renderEventsByDays(eventsByDays, this._daysComponent.getElement());
+
+    this._sortComponent.setSortTypeChangeHandler((sortType) => {
+      const sortedEvents = getSortedEvents(events, sortType);
+
+      this._daysComponent.getElement().innerHTML = ``;
+
+      if (sortType === SortType.DEFAULT) {
+        renderEventsByDays(sortedEvents, this._daysComponent.getElement());
+      } else {
+        renderEvents(sortedEvents, this._daysComponent.getElement());
+      }
+    });
   }
 }

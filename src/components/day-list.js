@@ -1,6 +1,6 @@
 import AbstractComponent from './abstract-component';
 
-const createDayListTemplate = (count) => {
+const createDayListTemplate = (count = 0) => {
   return (
     `<ul class="trip-events__list trip-events__list--day-${count}"></ul>`
   );

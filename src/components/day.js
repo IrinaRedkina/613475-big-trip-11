@@ -1,9 +1,14 @@
 import AbstractComponent from './abstract-component';
 import {formatDate} from '../utils/date';
 
-const createDayTemplate = (count, date) => {
-  const fullDate = formatDate(date, `Y-m-d`);
-  const shortDate = formatDate(date, `M d`);
+const createDayTemplate = (count = ``, date = ``) => {
+  let fullDate = ``;
+  let shortDate = ``;
+
+  if (date instanceof Date) {
+    fullDate = formatDate(date, `Y-m-d`);
+    shortDate = formatDate(date, `M d`);
+  }
 
   return (
     `<li class="trip-days__item day">
