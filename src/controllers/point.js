@@ -30,8 +30,6 @@ export default class PointController {
     this._eventComponent = new EventComponent(event);
     this._eventEditComponent = new EditEventComponent(event);
 
-    this._eventEditComponent.initDateInput();
-
     this._eventComponent.setClickEditHandler(() => {
       this._replaceEventToEdit();
     });
@@ -43,12 +41,6 @@ export default class PointController {
     this._eventEditComponent.setSubmitHandler((evt) => {
       evt.preventDefault();
       this._replaceEditToEvent();
-    });
-
-    this._eventEditComponent.setClickFavoriteHandler(() => {
-      this._onDataChange(this, event, Object.assign({}, event, {
-        isFavorite: !event.isFavorite
-      }));
     });
 
     if (oldEventEditComponent && oldEventComponent) {
@@ -68,7 +60,7 @@ export default class PointController {
 
   _replaceEventToEdit() {
     this._onViewChange();
-
+    this._eventEditComponent.initFlatpickr();
     replace(this._eventEditComponent, this._eventComponent);
     document.addEventListener(`keydown`, this._onEscKeyDown);
 
@@ -77,6 +69,7 @@ export default class PointController {
 
   _replaceEditToEvent() {
     replace(this._eventComponent, this._eventEditComponent);
+    this._eventEditComponent.destroyFlatpickr();
     document.removeEventListener(`keydown`, this._onEscKeyDown);
 
     this._mode = Mode.DEFAULT;

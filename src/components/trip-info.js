@@ -1,5 +1,5 @@
-import {formatDate} from '../utils/date';
 import AbstractComponent from './abstract-component';
+import {formatDate} from '../utils/date';
 
 const MAX_CITIES_IN_TITLE_COUNT = 3;
 const CITIES_SEPARATION = `...`;
@@ -17,9 +17,9 @@ const createTripInfoTemplate = (tripDateStart, tripDateEnd, routePoints) => {
   const isOneDate = tripDateStart.getDate() === tripDateEnd.getDate();
 
   const delimiter = `&nbsp;&mdash;&nbsp;`;
-  const formattingDateEnd = isOneMonth ? `d` : `M d`;
+  const formattingDateEnd = isOneMonth ? `DD` : `MMM DD`;
 
-  const dateStart = formatDate(tripDateStart, `M d`);
+  const dateStart = formatDate(tripDateStart, `MMM DD`);
   const dateEnd = isOneDate ? `` : `${delimiter} ${formatDate(tripDateEnd, formattingDateEnd)}`;
 
   const cities = routePoints.filter((city, i, items) => city !== items[i - 1]);
