@@ -19,7 +19,7 @@ const createOfferMarkup = (option) => {
   );
 };
 
-const createEventTemplate = (event, idEvent) => {
+const createEventTemplate = (event) => {
   const {type, city, price, options, selectedOptions, dueDateStart, dueDateEnd} = event;
 
   const typeData = types[type];
@@ -39,7 +39,7 @@ const createEventTemplate = (event, idEvent) => {
     .join(`\n`) : ``;
 
   return (
-    `<li class="trip-events__item" data-id="${idEvent}">
+    `<li class="trip-events__item">
       <div class="event">
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
@@ -75,18 +75,17 @@ const createEventTemplate = (event, idEvent) => {
 };
 
 export default class Event extends AbstractComponent {
-  constructor(event, id) {
+  constructor(event) {
     super();
 
     this._event = event;
-    this._id = id;
   }
 
   getTemplate() {
-    return createEventTemplate(this._event, this._id);
+    return createEventTemplate(this._event);
   }
 
-  setClickEditButtonHandler(handler) {
+  setClickEditHandler(handler) {
     this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
       handler();
     });

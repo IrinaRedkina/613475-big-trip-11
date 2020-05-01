@@ -21,3 +21,7 @@ export const getRandomNumber = (min, max) => {
 export const getRandomLengthArray = (array) => {
   return array.filter(() => Math.random() > 0.5);
 };
+
+export const isInteger = (num) => {
+  return (num ^ 0) === num;
+};

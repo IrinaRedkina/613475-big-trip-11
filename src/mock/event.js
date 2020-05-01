@@ -1,10 +1,9 @@
 import {getRandomNumber, getRandomElement} from '../utils/common';
-import {cities, generateDestinations} from './destination';
+import {cities, destinations} from './destination';
 import {offers} from './offer';
 
 const MAX_PRICE_VALUE = 500;
-
-const destinations = generateDestinations();
+const MAX_OPTIONS_COUNT = 5;
 
 const types = {
   'taxi': {
@@ -59,10 +58,26 @@ const types = {
   }
 };
 
+const TypePlaceholder = {
+  'transfer': `to`,
+  'activity': `in`
+};
+
 const typeList = Object.keys(types);
 
 const getAvailableOptions = (offerIds) => {
-  return offers.filter((offer) => offerIds.indexOf(offer.id) !== -1).slice(0, 5);
+  return offers.filter((offer) => offerIds.indexOf(offer.id) !== -1);
+};
+
+const generateSelectedOptionsDefault = (options) => {
+  const optionIds = options.map((item) => item.id);
+  const selectedOptions = {};
+
+  optionIds.forEach((option) => {
+    selectedOptions[option] = false;
+  });
+
+  return selectedOptions;
 };
 
 const generateSelectedOptions = (options) => {
@@ -94,30 +109,12 @@ const getRandomDates = () => {
   return {start, end};
 };
 
-const getDefaultEvent = () => {
-  const type = `flight`;
-  const typeData = types[type];
-  const options = getAvailableOptions(typeData[`offers`]);
-
-  return {
-    type,
-    options,
-    selectedOptions: false,
-    city: null,
-    destination: null,
-    price: null,
-    isFavorite: false,
-    dueDateStart: new Date(),
-    dueDateEnd: new Date(),
-  };
-};
-
 const generateEvent = () => {
   const type = getRandomElement(typeList);
   const typeData = types[type];
   const city = getRandomElement(cities);
   const destination = destinations[city];
-  const options = getAvailableOptions(typeData[`offers`]);
+  const options = getAvailableOptions(typeData[`offers`]).slice(0, MAX_OPTIONS_COUNT);
   const selectedOptions = generateSelectedOptions(options);
   const randomDates = getRandomDates();
 
@@ -125,7 +122,7 @@ const generateEvent = () => {
     type,
     city,
     destination,
-    options: options.length > 0 ? options : null,
+    options,
     selectedOptions,
     price: getRandomNumber(0, MAX_PRICE_VALUE),
     isFavorite: Math.random() > 0.5,
@@ -143,6 +140,7 @@ const generateEvents = (count) => {
 export {
   generateEvent,
   generateEvents,
-  getDefaultEvent,
-  types, typeList
+  getAvailableOptions,
+  generateSelectedOptionsDefault,
+  types, typeList, TypePlaceholder
 };

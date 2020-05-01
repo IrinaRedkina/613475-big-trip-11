@@ -1,18 +1,20 @@
-import {toUpperCaseFirstLetter} from '../utils/common';
-import AbstractComponent from './abstract-component';
-import {types, getDefaultEvent} from '../mock/event';
+import AbstractSmartComponent from './abstract-smart-component';
 import {createTypeListMarkup} from './event-type-markup';
 import {createOffersMarkup} from './event-offer-markup';
 import {createCitiesMarkup, createDestinationMarkup} from './event-destination-markup';
+import {toUpperCaseFirstLetter, isInteger} from '../utils/common';
+import {types, getAvailableOptions, generateSelectedOptionsDefault} from '../mock/event';
+import {destinations} from '../mock/destination';
 import flatpickr from 'flatpickr';
 
 const INPUT_DATE_FORMAT = `d/m/y H:i`;
+const MAX_OPTIONS_COUNT = 5;
 
-const createFavoriteMarkup = (isFavorite, idEvent) => {
+const createFavoriteMarkup = (isFavorite) => {
   return (
-    `<input id="event-favorite-${idEvent}" class="event__favorite-checkbox  visually-hidden" type="checkbox" name="event-favorite" ${isFavorite ? `checked` : ``}>
-    <label class="event__favorite-btn" for="event-favorite-${idEvent}">
-      <span class="visually-hidden">Add to favorite</span>
+    `<input id="event-favorite" class="event__favorite-checkbox visually-hidden" type="checkbox" name="event-favorite" ${isFavorite ? `checked` : ``}>
+    <label class="event__favorite-btn" for="event-favorite">
+      <span class="visually-hidden">${isFavorite ? `Remove from favorite` : `Add to favorite`}</span>
       <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
         <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>
       </svg>
@@ -20,73 +22,70 @@ const createFavoriteMarkup = (isFavorite, idEvent) => {
   );
 };
 
-const createDateTimeMarkup = (startDate, endDate, idEvent) => {
+const createDateTimeMarkup = (startDate, endDate) => {
   return (
     `<div class="event__field-group  event__field-group--time">
-      <label class="visually-hidden" for="event-start-time-${idEvent}">
+      <label class="visually-hidden" for="event-start-time">
         From
       </label>
-      <input class="event__input  event__input--time" id="event-start-time-${idEvent}" type="text" name="event-start-time" value="${startDate}">
+      <input class="event__input  event__input--time" id="event-start-time" type="text" name="event-start-time" value="${startDate}">
       &mdash;
-      <label class="visually-hidden" for="event-end-time-${idEvent}">
+      <label class="visually-hidden" for="event-end-time">
         To
       </label>
-      <input class="event__input  event__input--time" id="event-end-time-${idEvent}" type="text" name="event-end-time" value="${endDate}">
+      <input class="event__input  event__input--time" id="event-end-time" type="text" name="event-end-time" value="${endDate}">
     </div>`
   );
 };
 
-const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0) => {
-  const {type, city, price, destination, options, selectedOptions, isFavorite, dueDateStart, dueDateEnd} = event;
+const createEditEventTemplate = (event, data = {}) => {
+  const {isFavorite, dueDateStart, dueDateEnd} = event;
+  const {price, type, typePlaceholder, city, destination, options, isOffersShowing, isDestinationShowing, selectedOptions} = data;
 
-  const isShowingDestination = destination && (destination.description.length > 0 || destination.photos.length) > 0 ? true : false;
-  const isShowingOffers = options ? true : false;
-  const isShowingDetails = isShowingDestination || isShowingOffers;
-
-  const typeData = types[type];
-  const title = `${toUpperCaseFirstLetter(type)} ${typeData[`placeholder`]}`;
+  const isShowingDetails = isDestinationShowing || isOffersShowing;
+  const title = `${toUpperCaseFirstLetter(type)} ${typePlaceholder}`;
 
   return (
-    `<li class="trip-events__item" data-id="${idEvent}">
+    `<li class="trip-events__item">
       <form class="event  event--edit" action="#" method="post">
         <header class="event__header">
 
           <div class="event__type-wrapper">
-            <label class="event__type event__type-btn" for="event-type-toggle-${idEvent}">
+            <label class="event__type event__type-btn" for="event-type-toggle">
               <span class="visually-hidden">Choose event type</span>
               <img class="event__type-icon" width="17" height="17" src="img/icons/${type}.png" alt="Event type icon">
             </label>
-            <input class="event__type-toggle  visually-hidden" id="event-type-toggle-${idEvent}" type="checkbox">
-            ${createTypeListMarkup(type, idEvent)}
+            <input class="event__type-toggle  visually-hidden" id="event-type-toggle" type="checkbox">
+            ${createTypeListMarkup(type)}
           </div>
 
           <div class="event__field-group  event__field-group--destination">
-            <label class="event__label  event__type-output" for="event-destination-${idEvent}">
+            <label class="event__label  event__type-output" for="event-destination">
               ${title}
             </label>
             <input
               class="event__input event__input--destination"
-              id="event-destination-${idEvent}"
+              id="event-destination"
               type="text"
               name="event-destination"
               value="${city ? city : ``}"
-              list="destination-list-${idEvent}"
+              list="destination-list"
             >
-            <datalist id="destination-list-${idEvent}">
+            <datalist id="destination-list">
               ${createCitiesMarkup()}
             </datalist>
           </div>
 
-          ${createDateTimeMarkup(dueDateStart, dueDateEnd, idEvent)}
+          ${createDateTimeMarkup(dueDateStart, dueDateEnd)}
 
           <div class="event__field-group  event__field-group--price">
-            <label class="event__label" for="event-price-${idEvent}">
+            <label class="event__label" for="event-price">
               <span class="visually-hidden">Price</span>
               &euro;
             </label>
             <input
               class="event__input event__input--price"
-              id="event-price-${idEvent}"
+              id="event-price"
               type="text"
               name="event-price"
               value="${price ? price : ``}"
@@ -96,7 +95,7 @@ const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0) => {
           <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
           <button class="event__reset-btn" type="reset">Delete</button>
 
-          ${createFavoriteMarkup(isFavorite, idEvent)}
+          ${createFavoriteMarkup(isFavorite)}
 
           <button class="event__rollup-btn" type="button">
             <span class="visually-hidden">Open event</span>
@@ -105,8 +104,8 @@ const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0) => {
 
         ${isShowingDetails ? `
         <section class="event__details">
-          ${isShowingOffers ? createOffersMarkup(options, selectedOptions, idEvent) : ``}
-          ${isShowingDestination ? createDestinationMarkup(destination) : ``}
+          ${isOffersShowing ? createOffersMarkup(options, selectedOptions) : ``}
+          ${isDestinationShowing ? createDestinationMarkup(destination) : ``}
         </section>
         ` : ``}
       </form>
@@ -115,29 +114,148 @@ const createEditEventTemplate = (event = getDefaultEvent(), idEvent = 0) => {
 };
 
 
-export default class EditEvent extends AbstractComponent {
-  constructor(event, id) {
+export default class EditEvent extends AbstractSmartComponent {
+  constructor(event) {
     super();
 
     this._event = event;
-    this._id = id;
+    this._type = event.type;
+    this._typePlaceholder = types[event.type][`placeholder`];
+    this._city = event.city;
+    this._destination = event.destination;
+    this._options = event.options;
+    this._selectedOptions = Object.assign({}, event.selectedOptions);
+    this._isOffersShowing = event.options.length > 0;
+    this._isDestinationShowing = event.destination ? true : false;
+    this._price = event.price;
+
+    this._submitHandler = null;
+    this._closeEditHandler = null;
+    this._favoriteHandler = null;
+
+    this._subscribeOnEvents();
   }
 
   getTemplate() {
-    return createEditEventTemplate(this._event, this._id);
-  }
-
-  setClickEditButtonCloseHandler(handler) {
-    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
-      handler();
+    return createEditEventTemplate(this._event, {
+      type: this._type,
+      typePlaceholder: this._typePlaceholder,
+      city: this._city,
+      options: this._options,
+      destination: this._destination,
+      selectedOptions: this._selectedOptions,
+      isOffersShowing: this._isOffersShowing,
+      isDestinationShowing: this._isDestinationShowing,
+      price: this._price
     });
   }
 
-  setSubmitEditFormHandler(handler) {
+  _showDestinationBlock(destination) {
+    return destination && (destination.description.length > 0 || destination.photos.length) > 0;
+  }
+
+  reset() {
+    const event = this._event;
+
+    this._type = event.type;
+    this._typePlaceholder = types[event.type][`placeholder`];
+    this._city = event.city;
+    this._destination = event.destination;
+    this._options = event.options;
+    this._selectedOptions = Object.assign({}, event.selectedOptions);
+    this._isOffersShowing = event.options.length > 0;
+    this._isDestinationShowing = event.destination ? true : false;
+    this._price = event.price;
+
+    this.rerender();
+  }
+
+  recoveryListeners() {
+    this._subscribeOnEvents();
+    this.setSubmitHandler(this._submitHandler);
+    this.setClickCloseHandler(this._closeEditHandler);
+    this.setClickFavoriteHandler(this._favoriteHandler);
+  }
+
+  _subscribeOnEvents() {
+    const element = this.getElement();
+
+    element.querySelector(`.event__input--price`)
+      .addEventListener(`change`, (evt) => {
+        this._price = Number(evt.target.value);
+
+        this.getElement().querySelector(`.event__save-btn`)
+          .disabled = !isInteger(this._price);
+      });
+
+    const typeList = element.querySelector(`.event__type-list`);
+
+    if (typeList) {
+      typeList.addEventListener(`change`, (evt) => {
+        const type = evt.target.value;
+        const options = getAvailableOptions(types[type][`offers`]).slice(0, MAX_OPTIONS_COUNT);
+
+        this._type = type;
+        this._typePlaceholder = evt.target.dataset.placeholder;
+        this._options = options;
+        this._isOffersShowing = options.length > 0;
+        this._selectedOptions = generateSelectedOptionsDefault(options);
+
+        this.rerender();
+      });
+    }
+
+    const optionsList = element.querySelector(`.event__available-offers`);
+
+    if (optionsList) {
+      optionsList.addEventListener(`change`, (evt) => {
+        this._selectedOptions[evt.target.dataset.option] = evt.target.checked;
+
+        this.rerender();
+      });
+    }
+
+    const cityInput = element.querySelector(`.event__input--destination`);
+
+    if (cityInput) {
+      cityInput.addEventListener(`change`, (evt) => {
+        const city = evt.target.value;
+
+        this._city = city;
+        this._destination = destinations[city];
+        this._isDestinationShowing = destinations[city] ? true : false;
+
+        this.rerender();
+      });
+    }
+  }
+
+  setClickCloseHandler(handler) {
+    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
+      this.reset();
+      handler();
+    });
+
+    this._closeEditHandler = handler;
+  }
+
+  setSubmitHandler(handler) {
     this.getElement().querySelector(`form`).addEventListener(`submit`, (evt) => {
       handler(evt);
     });
+
+    this._submitHandler = handler;
   }
+
+  setClickFavoriteHandler(handler) {
+    this.getElement().querySelector(`.event__favorite-checkbox`)
+      .addEventListener(`change`, (evt) => {
+        handler(evt);
+      });
+
+    this._favoriteHandler = handler;
+  }
+
 
   initDateInput() {
     this.getElement().querySelectorAll(`.event__input--time`).forEach((field) => {
