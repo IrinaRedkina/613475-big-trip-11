@@ -26,13 +26,17 @@ const generateDestinations = () => {
   const descriptionStrings = getRandomLengthArray(descriptions);
 
   cities.forEach((city) => {
-    destinations[city] = {
-      description: `${descriptionStrings.join(` `)}`,
-      photos: generatePictures(getRandomNumber(0, 7))
-    };
+    if (city !== `Geneva` && city !== `Amsterdam`) {
+      destinations[city] = {
+        description: `${city}. ${descriptionStrings.join(` `)}`,
+        photos: generatePictures(getRandomNumber(0, 7))
+      };
+    }
   });
 
   return destinations;
 };
 
-export {cities, generateDestinations};
+const destinations = generateDestinations();
+
+export {cities, destinations};

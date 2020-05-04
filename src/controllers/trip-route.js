@@ -3,117 +3,38 @@ import {SortType} from '../components/sort';
 import DaysComponent from '../components/days';
 import DayComponent from '../components/day';
 import DayListComponent from '../components/day-list';
-import EventComponent from '../components/event';
-import EditEventComponent from '../components/event-edit';
 import EventsEmptyComponent from '../components/events-empty';
-import {Key} from '../utils/common';
-import {RenderPosition, render, replace} from '../utils/render';
-
-const renderEvent = (eventsList, event, index) => {
-  const eventComponent = new EventComponent(event, index);
-  const editEventComponent = new EditEventComponent(event, index);
-
-  editEventComponent.initDateInput();
-
-  const onEscKeyDown = (evt) => {
-    if (evt.key === Key.ESC || evt.key === Key.ESC_SHORT) {
-      replace(eventComponent, editEventComponent);
-      document.removeEventListener(`keydown`, onEscKeyDown);
-    }
-  };
-
-  eventComponent.setClickEditButtonHandler(() => {
-    replace(editEventComponent, eventComponent);
-    document.addEventListener(`keydown`, onEscKeyDown);
-  });
-
-  editEventComponent.setClickEditButtonCloseHandler(() => {
-    replace(eventComponent, editEventComponent);
-    document.removeEventListener(`keydown`, onEscKeyDown);
-  });
-
-  editEventComponent.setSubmitEditFormHandler((evt) => {
-    evt.preventDefault();
-    replace(eventComponent, editEventComponent);
-    document.removeEventListener(`keydown`, onEscKeyDown);
-  });
-
-  render(eventsList, eventComponent, RenderPosition.BEFOREEND);
-};
+import {RenderPosition, render} from '../utils/render';
+import PointController from './point';
 
 const getPrevDate = (prevEvent) => {
   return prevEvent ? prevEvent.dueDateStart : new Date(0);
 };
 
-const renderEventsByDays = (events, container) => {
-  let dateCount = 1;
-  let eventsList = null;
-
-  events.forEach((event, i, items) => {
-    const currentDate = event.dueDateStart;
-    const prevDate = getPrevDate(items[i - 1]);
-
-    if (currentDate.toDateString() !== prevDate.toDateString()) {
-      const dayComponent = new DayComponent(dateCount, event.dueDateStart);
-      const dayListComponent = new DayListComponent(dateCount);
-
-      render(container, dayComponent, RenderPosition.BEFOREEND);
-      render(dayComponent.getElement(), dayListComponent, RenderPosition.BEFOREEND);
-
-      eventsList = dayListComponent.getElement();
-      dateCount += 1;
-    }
-
-    renderEvent(eventsList, event, i);
-  });
-};
-
-const renderEvents = (events, container) => {
-  const dayComponent = new DayComponent();
-  const dayListComponent = new DayListComponent();
-
-  render(container, dayComponent, RenderPosition.BEFOREEND);
-  render(dayComponent.getElement(), dayListComponent, RenderPosition.BEFOREEND);
-
-  const eventsList = dayListComponent.getElement();
-
-  events.forEach((event, i) => {
-    renderEvent(eventsList, event, i);
-  });
-};
-
-const getSortedEvents = (events, sortType) => {
-  let sortedEvents = [];
-  const showingEvents = events.slice();
-
-  switch (sortType) {
-    case SortType.TIME:
-      sortedEvents = showingEvents.sort((a, b) => (a.dueDateStart - a.dueDateEnd) - (b.dueDateStart - b.dueDateEnd));
-      break;
-    case SortType.PRICE:
-      sortedEvents = showingEvents.sort((a, b) => b.price - a.price);
-      break;
-    case SortType.DEFAULT:
-      sortedEvents = showingEvents.sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
-      break;
-  }
-
-  return sortedEvents;
-};
-
 export default class TripController {
   constructor(container) {
     this._container = container;
+    this._events = [];
+    this._eventControllers = [];
 
     this._eventsEmptyComponent = new EventsEmptyComponent();
     this._daysComponent = new DaysComponent();
     this._sortComponent = new SortComponent();
+
+    this._daysList = this._daysComponent.getElement();
+
+    this._onSortTypeChange = this._onSortTypeChange.bind(this);
+    this._sortComponent.setSortTypeChangeHandler(this. _onSortTypeChange);
+
+    this._onDataChange = this._onDataChange.bind(this);
+    this._onViewChange = this._onViewChange.bind(this);
   }
 
   render(events) {
     const container = this._container;
+    this._events = events;
 
-    if (events.length === 0) {
+    if (this._events.length === 0) {
       render(container, this._eventsEmptyComponent, RenderPosition.BEFOREEND);
       return;
     }
@@ -121,20 +42,100 @@ export default class TripController {
     render(container, this._sortComponent, RenderPosition.BEFOREEND);
     render(container, this._daysComponent, RenderPosition.BEFOREEND);
 
-    const eventsByDays = getSortedEvents(events, SortType.DEFAULT);
+    const eventsByDays = this._getSortedEvents(this._events, SortType.DEFAULT);
+    const eventControllers = this._renderEventsByDays(eventsByDays, this._daysList);
 
-    renderEventsByDays(eventsByDays, this._daysComponent.getElement());
+    this._eventControllers = eventControllers;
+  }
 
-    this._sortComponent.setSortTypeChangeHandler((sortType) => {
-      const sortedEvents = getSortedEvents(events, sortType);
+  _onSortTypeChange(sortType) {
+    const sortedEvents = this._getSortedEvents(this._events, sortType);
 
-      this._daysComponent.getElement().innerHTML = ``;
+    this._daysList.innerHTML = ``;
 
-      if (sortType === SortType.DEFAULT) {
-        renderEventsByDays(sortedEvents, this._daysComponent.getElement());
-      } else {
-        renderEvents(sortedEvents, this._daysComponent.getElement());
+    const eventControllers = (sortType === SortType.DEFAULT)
+      ? this._renderEventsByDays(sortedEvents, this._daysList)
+      : this._renderEvents(sortedEvents, this._daysList);
+
+    this._eventControllers = eventControllers;
+  }
+
+  _renderEventsByDays(events, daysList) {
+    let dateCount = 1;
+    let eventsList = null;
+
+    return events.map((event, i, items) => {
+      const currentDate = event.dueDateStart;
+      const prevDate = getPrevDate(items[i - 1]);
+
+      if (currentDate.toDateString() !== prevDate.toDateString()) {
+        const dayComponent = new DayComponent(dateCount, event.dueDateStart);
+        const dayListComponent = new DayListComponent(dateCount);
+
+        render(daysList, dayComponent, RenderPosition.BEFOREEND);
+        render(dayComponent.getElement(), dayListComponent, RenderPosition.BEFOREEND);
+
+        eventsList = dayListComponent.getElement();
+        dateCount += 1;
       }
+
+      return this._renderEvent(eventsList, event);
     });
+  }
+
+  _renderEvents(events, daysList) {
+    const dayComponent = new DayComponent();
+    const dayListComponent = new DayListComponent();
+
+    render(daysList, dayComponent, RenderPosition.BEFOREEND);
+    render(dayComponent.getElement(), dayListComponent, RenderPosition.BEFOREEND);
+
+    const eventsList = dayListComponent.getElement();
+
+    return events.map((event) => {
+      return this._renderEvent(eventsList, event);
+    });
+  }
+
+  _renderEvent(eventsList, event) {
+    const pointController = new PointController(eventsList, this._onDataChange, this._onViewChange);
+    pointController.render(event);
+
+    return pointController;
+  }
+
+  _getSortedEvents(events, sortType) {
+    let sortedEvents = [];
+    const showingEvents = events.slice();
+
+    switch (sortType) {
+      case SortType.TIME:
+        sortedEvents = showingEvents.sort((a, b) => (a.dueDateStart - a.dueDateEnd) - (b.dueDateStart - b.dueDateEnd));
+        break;
+      case SortType.PRICE:
+        sortedEvents = showingEvents.sort((a, b) => b.price - a.price);
+        break;
+      case SortType.DEFAULT:
+        sortedEvents = showingEvents.sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
+        break;
+    }
+
+    return sortedEvents;
+  }
+
+  _onDataChange(eventController, oldData, newData) {
+    const index = this._events.findIndex((it) => it === oldData);
+
+    if (index === -1) {
+      return;
+    }
+
+    this._events = [].concat(this._events.slice(0, index), newData, this._events.slice(index + 1));
+
+    eventController.render(this._events[index]);
+  }
+
+  _onViewChange() {
+    this._eventControllers.forEach((it) => it.setDefaultView());
   }
 }
