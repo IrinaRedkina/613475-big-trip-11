@@ -3,7 +3,7 @@ import TripHeaderController from './controllers/trip-header';
 import {generateEvents} from './mock/event';
 import {filters} from './mock/filter';
 
-const TRIP_EVENT_COUNT = 5;
+const TRIP_EVENT_COUNT = 15;
 const events = generateEvents(TRIP_EVENT_COUNT);
 
 const totalPrice = events ? events.reduce((acc, event) => acc + event.price, 0) : 0;

@@ -6,8 +6,8 @@ const createDayTemplate = (count = ``, date = ``) => {
   let shortDate = ``;
 
   if (date instanceof Date) {
-    fullDate = formatDate(date, `Y-m-d`);
-    shortDate = formatDate(date, `M d`);
+    fullDate = formatDate(date, `Y-MM-DD`);
+    shortDate = formatDate(date, `MMM DD`);
   }
 
   return (

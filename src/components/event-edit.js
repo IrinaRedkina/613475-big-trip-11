@@ -7,6 +7,8 @@ import {types, getAvailableOptions, generateSelectedOptionsDefault} from '../moc
 import {destinations} from '../mock/destination';
 import flatpickr from 'flatpickr';
 
+import "flatpickr/dist/flatpickr.min.css";
+
 const INPUT_DATE_FORMAT = `d/m/y H:i`;
 const MAX_OPTIONS_COUNT = 5;
 
@@ -39,8 +41,8 @@ const createDateTimeMarkup = (startDate, endDate) => {
 };
 
 const createEditEventTemplate = (event, data = {}) => {
-  const {isFavorite, dueDateStart, dueDateEnd} = event;
-  const {price, type, typePlaceholder, city, destination, options, isOffersShowing, isDestinationShowing, selectedOptions} = data;
+  // const {dueDateStart, dueDateEnd} = event;
+  const {dueDateStart, dueDateEnd, isFavorite, price, type, typePlaceholder, city, destination, options, isOffersShowing, isDestinationShowing, selectedOptions} = data;
 
   const isShowingDetails = isDestinationShowing || isOffersShowing;
   const title = `${toUpperCaseFirstLetter(type)} ${typePlaceholder}`;
@@ -119,6 +121,7 @@ export default class EditEvent extends AbstractSmartComponent {
     super();
 
     this._event = event;
+
     this._type = event.type;
     this._typePlaceholder = types[event.type][`placeholder`];
     this._city = event.city;
@@ -128,10 +131,15 @@ export default class EditEvent extends AbstractSmartComponent {
     this._isOffersShowing = event.options.length > 0;
     this._isDestinationShowing = event.destination ? true : false;
     this._price = event.price;
+    this._isFavorite = event.isFavorite;
+    this._dueDateEnd = event.dueDateEnd;
+    this._dueDateStart = event.dueDateStart;
 
     this._submitHandler = null;
     this._closeEditHandler = null;
-    this._favoriteHandler = null;
+
+    this._dateStartflatpickr = null;
+    this._dateEndflatpickr = null;
 
     this._subscribeOnEvents();
   }
@@ -146,12 +154,11 @@ export default class EditEvent extends AbstractSmartComponent {
       selectedOptions: this._selectedOptions,
       isOffersShowing: this._isOffersShowing,
       isDestinationShowing: this._isDestinationShowing,
-      price: this._price
+      price: this._price,
+      isFavorite: this._isFavorite,
+      dueDateEnd: this._dueDateEnd,
+      dueDateStart: this._dueDateStart
     });
-  }
-
-  _showDestinationBlock(destination) {
-    return destination && (destination.description.length > 0 || destination.photos.length) > 0;
   }
 
   reset() {
@@ -166,15 +173,52 @@ export default class EditEvent extends AbstractSmartComponent {
     this._isOffersShowing = event.options.length > 0;
     this._isDestinationShowing = event.destination ? true : false;
     this._price = event.price;
+    this._dueDateEnd = event.dueDateEnd;
+    this._dueDateStart = event.dueDateStart;
 
     this.rerender();
+  }
+
+  rerender() {
+    super.rerender();
+    this.initFlatpickr();
   }
 
   recoveryListeners() {
     this._subscribeOnEvents();
     this.setSubmitHandler(this._submitHandler);
     this.setClickCloseHandler(this._closeEditHandler);
-    this.setClickFavoriteHandler(this._favoriteHandler);
+  }
+
+  destroyFlatpickr() {
+    if (this._dateStartflatpickr) {
+      this._dateStartflatpickr.destroy();
+      this._dateStartflatpickr = null;
+    }
+
+    if (this._dateEndflatpickr) {
+      this._dateEndflatpickr.destroy();
+      this._dateEndflatpickr = null;
+    }
+  }
+
+  initFlatpickr() {
+    this.destroyFlatpickr();
+
+    const dateStartInput = this.getElement().querySelector(`input[name=event-start-time]`);
+    const dateEndInput = this.getElement().querySelector(`input[name=event-end-time]`);
+
+    this._dateStartflatpickr = flatpickr(dateStartInput, {
+      enableTime: true,
+      dateFormat: INPUT_DATE_FORMAT,
+      defaultDate: this._event.dueDateStart || `today`,
+    });
+
+    this._dateEndflatpickr = flatpickr(dateEndInput, {
+      enableTime: true,
+      dateFormat: INPUT_DATE_FORMAT,
+      defaultDate: this._event.dueDateEnd || `today`,
+    });
   }
 
   _subscribeOnEvents() {
@@ -228,6 +272,13 @@ export default class EditEvent extends AbstractSmartComponent {
         this.rerender();
       });
     }
+
+    element.querySelector(`.event__favorite-checkbox`)
+      .addEventListener(`change`, () => {
+        this._isFavorite = !this._isFavorite;
+
+        this.rerender();
+      });
   }
 
   setClickCloseHandler(handler) {
@@ -245,25 +296,5 @@ export default class EditEvent extends AbstractSmartComponent {
     });
 
     this._submitHandler = handler;
-  }
-
-  setClickFavoriteHandler(handler) {
-    this.getElement().querySelector(`.event__favorite-checkbox`)
-      .addEventListener(`change`, (evt) => {
-        handler(evt);
-      });
-
-    this._favoriteHandler = handler;
-  }
-
-
-  initDateInput() {
-    this.getElement().querySelectorAll(`.event__input--time`).forEach((field) => {
-      flatpickr(field, {
-        enableTime: true,
-        dateFormat: INPUT_DATE_FORMAT,
-        defaultDate: new Date(field.value)
-      });
-    });
   }
 }
