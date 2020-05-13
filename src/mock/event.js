@@ -119,6 +119,7 @@ const generateEvent = () => {
   const randomDates = getRandomDates();
 
   return {
+    id: String(Date.now()) + Math.random(),
     type,
     city,
     destination,

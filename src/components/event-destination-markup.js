@@ -2,7 +2,7 @@ import {cities} from '../mock/destination';
 
 export const createCitiesMarkup = () => {
   return cities
-    .map((city) => `<option value="${city}"></option>`)
+    .map((city) => `<option value="${city}">${city}</option>`)
     .join(`\n`);
 };
 
