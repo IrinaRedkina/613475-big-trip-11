@@ -1,36 +1,34 @@
 import AbstractComponent from './abstract-component';
 
 export const SortType = {
-  PRICE: `price`,
+  DEFAULT: `event`,
   TIME: `time`,
-  DEFAULT: `default`,
+  PRICE: `price`,
 };
 
 const SORT_BY_DAY_TEXT = `Day`;
 
-const createSortTemplate = () => {
+const createSortMarkup = (sortType, isChecked) => {
+  return (
+    `<div class="trip-sort__item  trip-sort__item--${sortType}">
+      <input id="sort-${sortType}" class="trip-sort__input visually-hidden" type="radio" name="trip-sort" value="sort-${sortType}" ${isChecked ? `checked` : ``}>
+      <label class="trip-sort__btn  ${isChecked ? `trip-sort__btn--active trip-sort__btn--by-increase` : ``}" for="sort-${sortType}" data-sort-type="${sortType}">
+        ${sortType}
+      </label>
+    </div>`
+  );
+};
+
+const createSortTemplate = (currentSortType) => {
+  const sortMarkups = Object.values(SortType)
+    .map((sortType) => createSortMarkup(sortType, sortType === currentSortType))
+    .join(`\n`);
+
   return (
     `<form class="trip-events__trip-sort  trip-sort" action="#" method="get">
       <span class="trip-sort__item  trip-sort__item--day">${SORT_BY_DAY_TEXT}</span>
 
-      <div class="trip-sort__item  trip-sort__item--event">
-        <input id="sort-event" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-event" checked>
-        <label class="trip-sort__btn" for="sort-event" data-sort-type="${SortType.DEFAULT}">Event</label>
-      </div>
-
-      <div class="trip-sort__item  trip-sort__item--time">
-        <input id="sort-time" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-time">
-        <label class="trip-sort__btn  trip-sort__btn--active  trip-sort__btn--by-increase" for="sort-time" data-sort-type="${SortType.TIME}">
-          Time
-        </label>
-      </div>
-
-      <div class="trip-sort__item  trip-sort__item--price">
-        <input id="sort-price" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-price">
-        <label class="trip-sort__btn" for="sort-price" data-sort-type="${SortType.PRICE}">
-          Price
-        </label>
-      </div>
+      ${sortMarkups}
 
       <span class="trip-sort__item  trip-sort__item--offers">Offers</span>
     </form>`
@@ -45,7 +43,11 @@ export default class Sort extends AbstractComponent {
   }
 
   getTemplate() {
-    return createSortTemplate();
+    return createSortTemplate(this._currenSortType);
+  }
+
+  setSortType(sortType) {
+    this._currenSortType = sortType;
   }
 
   setSortTypeChangeHandler(handler) {

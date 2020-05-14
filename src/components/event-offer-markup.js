@@ -7,7 +7,8 @@ const createOfferMarkup = (option, isSelected) => {
         class="event__offer-checkbox visually-hidden"
         id="event-offer-${id}"
         type="checkbox"
-        name="event-offer-${id}"
+        name="event-offer"
+        value="${id}"
         data-option="${id}"
         ${isSelected ? `checked` : ``}
       >

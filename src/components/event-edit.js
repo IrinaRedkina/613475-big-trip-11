@@ -2,15 +2,15 @@ import AbstractSmartComponent from './abstract-smart-component';
 import {createTypeListMarkup} from './event-type-markup';
 import {createOffersMarkup} from './event-offer-markup';
 import {createCitiesMarkup, createDestinationMarkup} from './event-destination-markup';
-import {toUpperCaseFirstLetter, isInteger} from '../utils/common';
+import {toUpperCaseFirstLetter} from '../utils/common';
 import {types, getAvailableOptions, generateSelectedOptionsDefault} from '../mock/event';
+import {Mode as EventControllerMode} from '../controllers/event';
 import {destinations} from '../mock/destination';
 import flatpickr from 'flatpickr';
-
 import "flatpickr/dist/flatpickr.min.css";
 
-const INPUT_DATE_FORMAT = `d/m/y H:i`;
 const MAX_OPTIONS_COUNT = 5;
+const ERROR_MESSAGE_CITY_INPUT = `Введите допустимый город`;
 
 const createFavoriteMarkup = (isFavorite) => {
   return (
@@ -40,16 +40,18 @@ const createDateTimeMarkup = (startDate, endDate) => {
   );
 };
 
-const createEditEventTemplate = (event, data = {}) => {
-  // const {dueDateStart, dueDateEnd} = event;
-  const {dueDateStart, dueDateEnd, isFavorite, price, type, typePlaceholder, city, destination, options, isOffersShowing, isDestinationShowing, selectedOptions} = data;
+const createEditEventTemplate = (data = {}, mode = EventControllerMode.DEFAUTL) => {
+  const {dueDateStart, dueDateEnd, isFavorite, price, city, destination} = data;
+  const {isOffersShowing, isDestinationShowing, citiesPattern} = data;
+  const {type, typePlaceholder, options, selectedOptions} = data;
 
   const isShowingDetails = isDestinationShowing || isOffersShowing;
   const title = `${toUpperCaseFirstLetter(type)} ${typePlaceholder}`;
+  const isModeAdding = mode === EventControllerMode.ADDING;
 
   return (
-    `<li class="trip-events__item">
-      <form class="event  event--edit" action="#" method="post">
+    `${!isModeAdding ? `<li class="trip-events__item">` : `<div>`}
+      <form class="${isModeAdding ? `trip-events__item` : ``} event event--edit" action="#" method="post">
         <header class="event__header">
 
           <div class="event__type-wrapper">
@@ -72,8 +74,10 @@ const createEditEventTemplate = (event, data = {}) => {
               name="event-destination"
               value="${city ? city : ``}"
               list="destination-list"
+              required
+              pattern="${citiesPattern}"
             >
-            <datalist id="destination-list">
+            <datalist class="destination-list" id="destination-list">
               ${createCitiesMarkup()}
             </datalist>
           </div>
@@ -91,17 +95,21 @@ const createEditEventTemplate = (event, data = {}) => {
               type="text"
               name="event-price"
               value="${price ? price : ``}"
+              required
+              pattern="^[ 0-9]+$"
             >
           </div>
 
           <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-          <button class="event__reset-btn" type="reset">Delete</button>
+          <button class="event__reset-btn" type="reset">${isModeAdding ? `Cancel` : `Delete`}</button>
 
-          ${createFavoriteMarkup(isFavorite)}
+          ${isModeAdding ? `` : `${createFavoriteMarkup(isFavorite)}`}
 
+          ${isModeAdding ? `` : `
           <button class="event__rollup-btn" type="button">
             <span class="visually-hidden">Open event</span>
           </button>
+          `}
         </header>
 
         ${isShowingDetails ? `
@@ -111,13 +119,39 @@ const createEditEventTemplate = (event, data = {}) => {
         </section>
         ` : ``}
       </form>
-    </li>`
+    ${!isModeAdding ? `</li>` : `</div>`}`
   );
+};
+
+const parseFormData = (formData) => {
+  const dateStart = formData.get(`event-start-time`);
+  const dateEnd = formData.get(`event-end-time`);
+
+  const city = formData.get(`event-destination`);
+  const destination = destinations[city];
+
+  const type = formData.get(`event-type`);
+  const options = getAvailableOptions(types[type].offers);
+  const allAvailableOffers = generateSelectedOptionsDefault(options);
+
+  return {
+    type,
+    city,
+    destination,
+    options,
+    price: formData.get(`event-price`),
+    dueDateStart: dateStart ? new Date(dateStart) : null,
+    dueDateEnd: dateEnd ? new Date(dateEnd) : null,
+    selectedOptions: formData.getAll(`event-offer`).reduce((acc, it) => {
+      acc[it] = true;
+      return acc;
+    }, allAvailableOffers)
+  };
 };
 
 
 export default class EditEvent extends AbstractSmartComponent {
-  constructor(event) {
+  constructor(event, mode) {
     super();
 
     this._event = event;
@@ -134,9 +168,13 @@ export default class EditEvent extends AbstractSmartComponent {
     this._isFavorite = event.isFavorite;
     this._dueDateEnd = event.dueDateEnd;
     this._dueDateStart = event.dueDateStart;
+    this._citiesPattern = null;
+
+    this._mode = mode;
 
     this._submitHandler = null;
     this._closeEditHandler = null;
+    this._deleteButtonClickHandler = null;
 
     this._dateStartflatpickr = null;
     this._dateEndflatpickr = null;
@@ -145,7 +183,7 @@ export default class EditEvent extends AbstractSmartComponent {
   }
 
   getTemplate() {
-    return createEditEventTemplate(this._event, {
+    return createEditEventTemplate({
       type: this._type,
       typePlaceholder: this._typePlaceholder,
       city: this._city,
@@ -157,8 +195,16 @@ export default class EditEvent extends AbstractSmartComponent {
       price: this._price,
       isFavorite: this._isFavorite,
       dueDateEnd: this._dueDateEnd,
-      dueDateStart: this._dueDateStart
-    });
+      dueDateStart: this._dueDateStart,
+      citiesPattern: this._citiesPattern
+    }, this._mode);
+  }
+
+  getData() {
+    const form = this.getElement().querySelector(`form`);
+    const formData = new FormData(form);
+
+    return parseFormData(formData);
   }
 
   reset() {
@@ -188,16 +234,14 @@ export default class EditEvent extends AbstractSmartComponent {
     this._subscribeOnEvents();
     this.setSubmitHandler(this._submitHandler);
     this.setClickCloseHandler(this._closeEditHandler);
+    this.setDeleteButtonClickHandler(this._deleteButtonClickHandler);
   }
 
   destroyFlatpickr() {
-    if (this._dateStartflatpickr) {
+    if (this._dateStartflatpickr || this._dateEndflatpickr) {
       this._dateStartflatpickr.destroy();
-      this._dateStartflatpickr = null;
-    }
-
-    if (this._dateEndflatpickr) {
       this._dateEndflatpickr.destroy();
+      this._dateStartflatpickr = null;
       this._dateEndflatpickr = null;
     }
   }
@@ -210,13 +254,11 @@ export default class EditEvent extends AbstractSmartComponent {
 
     this._dateStartflatpickr = flatpickr(dateStartInput, {
       enableTime: true,
-      dateFormat: INPUT_DATE_FORMAT,
       defaultDate: this._event.dueDateStart || `today`,
     });
 
     this._dateEndflatpickr = flatpickr(dateEndInput, {
       enableTime: true,
-      dateFormat: INPUT_DATE_FORMAT,
       defaultDate: this._event.dueDateEnd || `today`,
     });
   }
@@ -224,14 +266,21 @@ export default class EditEvent extends AbstractSmartComponent {
   _subscribeOnEvents() {
     const element = this.getElement();
 
-    element.querySelector(`.event__input--price`)
-      .addEventListener(`change`, (evt) => {
-        this._price = Number(evt.target.value);
+    this._setTypeEvent(element);
+    this._setOptions(element);
+    this._validateDestination(element);
+    this._validatePrice(element);
 
-        this.getElement().querySelector(`.event__save-btn`)
-          .disabled = !isInteger(this._price);
-      });
+    if (this._mode !== EventControllerMode.ADDING) {
+      element.querySelector(`.event__favorite-checkbox`)
+        .addEventListener(`change`, () => {
+          this._isFavorite = !this._isFavorite;
+          this.rerender();
+        });
+    }
+  }
 
+  _setTypeEvent(element) {
     const typeList = element.querySelector(`.event__type-list`);
 
     if (typeList) {
@@ -248,7 +297,9 @@ export default class EditEvent extends AbstractSmartComponent {
         this.rerender();
       });
     }
+  }
 
+  _setOptions(element) {
     const optionsList = element.querySelector(`.event__available-offers`);
 
     if (optionsList) {
@@ -258,43 +309,93 @@ export default class EditEvent extends AbstractSmartComponent {
         this.rerender();
       });
     }
+  }
 
+  _setDestination(city) {
+    this._city = city;
+    this._destination = destinations[city];
+    this._isDestinationShowing = destinations[city] ? true : false;
+
+    this.rerender();
+  }
+
+  _validatePrice(element) {
+    element.querySelector(`.event__input--price`)
+      .addEventListener(`input`, (evt) => {
+        let value = evt.target.value;
+
+        if (!Number(evt.target.value)) {
+          evt.target.value = value.slice(0, -1);
+          return;
+        }
+
+        this._price = Number(value);
+      });
+  }
+
+  _validateDestination(element) {
     const cityInput = element.querySelector(`.event__input--destination`);
 
-    if (cityInput) {
-      cityInput.addEventListener(`change`, (evt) => {
-        const city = evt.target.value;
-
-        this._city = city;
-        this._destination = destinations[city];
-        this._isDestinationShowing = destinations[city] ? true : false;
-
-        this.rerender();
-      });
+    if (!cityInput) {
+      return;
     }
 
-    element.querySelector(`.event__favorite-checkbox`)
-      .addEventListener(`change`, () => {
-        this._isFavorite = !this._isFavorite;
+    const citiesOptions = element.querySelector(`.destination-list`).options;
+    const cities = Array.from(citiesOptions).map((option) => option.value);
+    const patternCities = cities.join(`|`);
 
-        this.rerender();
-      });
+    cityInput.setAttribute(`pattern`, patternCities);
+    this._citiesPattern = patternCities;
+
+    cityInput.addEventListener(`input`, (evt) => {
+      const city = evt.target.value;
+
+      if (cities.includes(city)) {
+        cityInput.setCustomValidity(``);
+        this._setDestination(city);
+      } else {
+        cityInput.setCustomValidity(ERROR_MESSAGE_CITY_INPUT);
+      }
+    });
+
+    cityInput.addEventListener(`change`, (evt) => {
+      const city = evt.target.value;
+
+      if (cities.includes(city)) {
+        this._setDestination(city);
+      } else {
+        evt.target.value = ``;
+      }
+    });
   }
 
   setClickCloseHandler(handler) {
-    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
-      this.reset();
-      handler();
-    });
+    if (this._mode !== EventControllerMode.ADDING) {
+      this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
+        this.reset();
+        handler();
+      });
 
-    this._closeEditHandler = handler;
+      this._closeEditHandler = handler;
+    }
   }
 
   setSubmitHandler(handler) {
-    this.getElement().querySelector(`form`).addEventListener(`submit`, (evt) => {
+    const formElement = this._mode !== EventControllerMode.ADDING
+      ? this.getElement().querySelector(`form`)
+      : this.getElement();
+
+    formElement.addEventListener(`submit`, (evt) => {
       handler(evt);
     });
 
     this._submitHandler = handler;
+  }
+
+  setDeleteButtonClickHandler(handler) {
+    this.getElement().querySelector(`.event__reset-btn`)
+      .addEventListener(`click`, handler);
+
+    this._deleteButtonClickHandler = handler;
   }
 }
