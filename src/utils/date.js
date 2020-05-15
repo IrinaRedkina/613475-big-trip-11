@@ -16,9 +16,9 @@ export const getTimeInterval = (dateStart, dateEnd) => {
   const diffTime = moment(dateEnd).diff(dateStart);
   const duration = moment.duration(diffTime);
 
-  const mdays = duration.days() ? `${castFormat(duration.days())}D` : ``;
+  const days = duration.days() ? `${castFormat(duration.days())}D` : ``;
   const hrs = duration.hours() ? `${castFormat(duration.hours())}H` : ``;
   const mins = duration.minutes() ? `${castFormat(duration.minutes())}M` : ``;
 
-  return `${mdays} ${hrs} ${mins}`;
+  return `${days} ${hrs} ${mins}`;
 };
