@@ -104,6 +104,17 @@ export default class TripController {
     this._renderEvents(events);
   }
 
+  hide() {
+    this._updateEvents();
+    this._sortComponent.hide();
+    this._daysComponent.hide();
+  }
+
+  show() {
+    this._sortComponent.show();
+    this._daysComponent.show();
+  }
+
   _onSortTypeChange(sortType) {
     this._activeSortType = sortType;
     const events = this._eventsModel.getEvents();

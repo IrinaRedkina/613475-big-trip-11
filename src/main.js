@@ -3,8 +3,10 @@ import TripRouteController from './controllers/trip-route';
 import TripInfoController from './controllers/trip-info';
 import FilterController from './controllers/filter';
 import MenuComponent from './components/menu';
+import StatisticsComponent from './components/statistics';
 import {generateEvents} from './mock/event';
 import {RenderPosition, render} from './utils/render';
+import {MenuItem} from './components/menu';
 
 const TRIP_EVENT_COUNT = 5;
 
@@ -32,8 +34,33 @@ const tripRouteContainer = document.querySelector(`.trip-events`);
 const tripRouteController = new TripRouteController(tripRouteContainer, eventsModel);
 tripRouteController.render();
 
+// статистика
+const pageContainer = document.querySelector(`.page-body__page-main .page-body__container`);
+const statisticsComponent = new StatisticsComponent(eventsModel);
+render(pageContainer, statisticsComponent, RenderPosition.BEFOREEND);
+statisticsComponent.hide();
+
 // клик по кнопке New event
 const addEventButton = siteHeaderContainer.querySelector(`.trip-main__event-add-btn`);
 addEventButton.addEventListener(`click`, () => {
+  menuComponent.setActiveItem(MenuItem.TRIP);
+  statisticsComponent.hide();
+  tripRouteController.show();
   tripRouteController.createEvent();
+});
+
+// смена пунктов меню
+menuComponent.setOnChange((menuItem) => {
+  switch (menuItem) {
+    case MenuItem.TRIP:
+      menuComponent.setActiveItem(MenuItem.TRIP);
+      statisticsComponent.hide();
+      tripRouteController.show();
+      break;
+    case MenuItem.STATISTICS:
+      menuComponent.setActiveItem(MenuItem.STATISTICS);
+      statisticsComponent.show();
+      tripRouteController.hide();
+      break;
+  }
 });
