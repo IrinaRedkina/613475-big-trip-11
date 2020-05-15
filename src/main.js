@@ -43,6 +43,9 @@ statisticsComponent.hide();
 // клик по кнопке New event
 const addEventButton = siteHeaderContainer.querySelector(`.trip-main__event-add-btn`);
 addEventButton.addEventListener(`click`, () => {
+  menuComponent.setActiveItem(MenuItem.TRIP);
+  statisticsComponent.hide();
+  tripRouteController.show();
   tripRouteController.createEvent();
 });
 
