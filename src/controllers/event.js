@@ -1,8 +1,10 @@
 import EventComponent from '../components/event';
-import EditEventComponent from '../components/event-edit';
+import EditEventComponent, {DefaultButtonText} from '../components/event-edit';
 import EventModel from '../models/event-adapter';
 import {Key} from '../utils/common';
 import {RenderPosition, render, replace, remove} from '../utils/render';
+
+const SHAKE_ANIMATION_TIMEOUT = 600;
 
 export const Mode = {
   ADDING: `adding`,
@@ -86,17 +88,20 @@ export default class EventController {
       const formData = this._eventEditComponent.getData();
       const data = parseFormData(formData, destinations);
 
-      this._onDataChange(this, event, data);
+      this._eventEditComponent.setData({
+        save: `Saving...`,
+      });
 
-      if (this._mode === Mode.ADDING) {
-        remove(this._eventEditComponent);
-        this._eventEditComponent.destroyFlatpickr();
-      } else {
-        this._replaceEditToEvent();
-      }
+      this._eventEditComponent.disabledSubmitForm();
+      this._onDataChange(this, event, data);
     });
 
     this._eventEditComponent.setDeleteButtonClickHandler(() => {
+      this._eventEditComponent.setData({
+        delete: `Deleting...`,
+      });
+
+      this._eventEditComponent.disabledSubmitForm();
       this._onDataChange(this, event, null);
     });
 
@@ -161,5 +166,20 @@ export default class EventController {
       this._eventEditComponent.reset();
       this._replaceEditToEvent();
     }
+  }
+
+  shake() {
+    this._eventEditComponent.getFormElement().style.animation = `shake ${SHAKE_ANIMATION_TIMEOUT / 1000}s`;
+    this._eventEditComponent.getFormElement().style.boxShadow = `0 0 5px red`;
+
+    setTimeout(() => {
+      this._eventEditComponent.getFormElement().style.animation = ``;
+      this._eventEditComponent.getFormElement().style.boxShadow = ``;
+
+      this._eventEditComponent.setData({
+        save: DefaultButtonText.save,
+        delete: DefaultButtonText.delete,
+      });
+    }, SHAKE_ANIMATION_TIMEOUT);
   }
 }

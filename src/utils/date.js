@@ -12,6 +12,10 @@ export const castFormat = (value) => {
   return value < 10 ? `0${value}` : String(value);
 };
 
+export const addDateDay = (date) => {
+  return moment(date).add(`days`, 1).format(`Y-MM-DD hh:mm`);
+};
+
 export const getTimeInterval = (dateStart, dateEnd) => {
   const diffTime = moment(dateEnd).diff(dateStart);
   const duration = moment.duration(diffTime);

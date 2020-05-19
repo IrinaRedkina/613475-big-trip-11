@@ -3,12 +3,18 @@ import {createTypeListMarkup} from './event-type-markup';
 import {createOffersMarkup} from './event-offer-markup';
 import {createCitiesMarkup, createDestinationMarkup} from './event-destination-markup';
 import {toUpperCaseFirstLetter, getTypeGroup} from '../utils/common';
+import {addDateDay} from '../utils/date';
 import {placeholderGroup} from '../const';
 import {Mode as EventControllerMode} from '../controllers/event';
 import flatpickr from 'flatpickr';
 import "flatpickr/dist/flatpickr.min.css";
 
 const ERROR_MESSAGE_CITY_INPUT = `Введите допустимый город`;
+
+export const DefaultButtonText = {
+  delete: `Delete`,
+  save: `Save`,
+};
 
 const getAvailableOffers = (type, offers) => {
   return offers.filter((offer) => offer.type === type)[0].offers;
@@ -43,7 +49,7 @@ const createDateTimeMarkup = (startDate, endDate) => {
 };
 
 const createEditEventTemplate = (mode = EventControllerMode.DEFAUTL, options = {}) => {
-  const {city, cities, isDestinationShowing, destination} = options;
+  const {city, cities, isDestinationShowing, destination, externalData} = options;
   const {dueDateStart, dueDateEnd, isFavorite, selectedOffers, availableOffers, price, type} = options;
 
   const placeholder = placeholderGroup[getTypeGroup(type)];
@@ -53,6 +59,9 @@ const createEditEventTemplate = (mode = EventControllerMode.DEFAUTL, options = {
   const isShowingDetails = isOffersShowing || isDestinationShowing;
 
   const isModeAdding = mode === EventControllerMode.ADDING;
+
+  const deleteButtonText = externalData.delete;
+  const saveButtonText = externalData.save;
 
   return (
     `${!isModeAdding ? `<li class="trip-events__item">` : `<div>`}
@@ -104,8 +113,8 @@ const createEditEventTemplate = (mode = EventControllerMode.DEFAUTL, options = {
             >
           </div>
 
-          <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-          <button class="event__reset-btn" type="reset">${isModeAdding ? `Cancel` : `Delete`}</button>
+          <button class="event__save-btn  btn  btn--blue" type="submit">${saveButtonText}</button>
+          <button class="event__reset-btn ${!isModeAdding ? `event__delete-btn` : ``}" type="reset">${isModeAdding ? `Cancel` : deleteButtonText}</button>
 
           ${isModeAdding ? `` : `${createFavoriteMarkup(isFavorite)}`}
 
@@ -147,6 +156,8 @@ export default class EditEvent extends AbstractSmartComponent {
 
     this._mode = mode;
 
+    this._externalData = DefaultButtonText;
+
     this._submitHandler = null;
     this._closeEditHandler = null;
     this._deleteButtonClickHandler = null;
@@ -169,7 +180,8 @@ export default class EditEvent extends AbstractSmartComponent {
       dueDateEnd: this._dueDateEnd,
       selectedOffers: this._selectedOffers,
       availableOffers: this._availableOffers,
-      isFavorite: this._isFavorite
+      isFavorite: this._isFavorite,
+      externalData: this._externalData
     });
   }
 
@@ -192,6 +204,11 @@ export default class EditEvent extends AbstractSmartComponent {
   getData() {
     const form = this.getElement().querySelector(`form`);
     return new FormData(form);
+  }
+
+  setData(data) {
+    this._externalData = Object.assign({}, DefaultButtonText, data);
+    this.rerender();
   }
 
   rerender() {
@@ -221,14 +238,24 @@ export default class EditEvent extends AbstractSmartComponent {
     const dateStartInput = this.getElement().querySelector(`input[name=event-start-time]`);
     const dateEndInput = this.getElement().querySelector(`input[name=event-end-time]`);
 
-    this._dateStartflatpickr = flatpickr(dateStartInput, {
+    const options = {
       enableTime: true,
+      altInput: true,
+      altFormat: `d/m/Y H:i`,
       defaultDate: this._event.dueDateStart || `today`,
-    });
+    };
 
-    this._dateEndflatpickr = flatpickr(dateEndInput, {
-      enableTime: true,
-      defaultDate: this._event.dueDateEnd || `today`,
+    this._dateStartflatpickr = flatpickr(dateStartInput, Object.assign({}, options));
+    this._dateEndflatpickr = flatpickr(dateEndInput, Object.assign({}, options, {
+      minDate: dateStartInput.value,
+      defaultDate: this._event.dueDateEnd || addDateDay(new Date()),
+    }));
+
+    dateStartInput.addEventListener(`change`, (evt) => {
+      const defaultDateEnd = addDateDay(evt.target.value);
+
+      this._dateEndflatpickr.set(`minDate`, evt.target.value);
+      this._dateEndflatpickr.setDate(defaultDateEnd);
     });
   }
 
@@ -357,7 +384,7 @@ export default class EditEvent extends AbstractSmartComponent {
   }
 
   setSubmitHandler(handler) {
-    const formElement = this._mode !== EventControllerMode.ADDING
+    const formElement = this._mode === EventControllerMode.ADDING
       ? this.getElement().querySelector(`form`)
       : this.getElement();
 
@@ -366,6 +393,21 @@ export default class EditEvent extends AbstractSmartComponent {
     });
 
     this._submitHandler = handler;
+  }
+
+  disabledSubmitForm() {
+    const formElement = this._mode === EventControllerMode.ADDING
+      ? this.getElement().querySelector(`form`)
+      : this.getElement();
+
+    formElement.querySelectorAll(`input, .event__save-btn, .event__delete-btn`)
+      .forEach((element) => element.setAttribute(`disabled`, `disabled`));
+  }
+
+  getFormElement() {
+    return this._mode === EventControllerMode.ADDING
+      ? this.getElement().querySelector(`form`)
+      : this.getElement();
   }
 
   setDeleteButtonClickHandler(handler) {
