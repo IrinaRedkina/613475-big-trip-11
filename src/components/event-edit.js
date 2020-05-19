@@ -3,6 +3,7 @@ import {createTypeListMarkup} from './event-type-markup';
 import {createOffersMarkup} from './event-offer-markup';
 import {createCitiesMarkup, createDestinationMarkup} from './event-destination-markup';
 import {toUpperCaseFirstLetter, getTypeGroup} from '../utils/common';
+import {addDateDay} from '../utils/date';
 import {placeholderGroup} from '../const';
 import {Mode as EventControllerMode} from '../controllers/event';
 import flatpickr from 'flatpickr';
@@ -237,14 +238,24 @@ export default class EditEvent extends AbstractSmartComponent {
     const dateStartInput = this.getElement().querySelector(`input[name=event-start-time]`);
     const dateEndInput = this.getElement().querySelector(`input[name=event-end-time]`);
 
-    this._dateStartflatpickr = flatpickr(dateStartInput, {
+    const options = {
       enableTime: true,
+      altInput: true,
+      altFormat: `d/m/Y H:i`,
       defaultDate: this._event.dueDateStart || `today`,
-    });
+    };
 
-    this._dateEndflatpickr = flatpickr(dateEndInput, {
-      enableTime: true,
-      defaultDate: this._event.dueDateEnd || `today`,
+    this._dateStartflatpickr = flatpickr(dateStartInput, Object.assign({}, options));
+    this._dateEndflatpickr = flatpickr(dateEndInput, Object.assign({}, options, {
+      minDate: dateStartInput.value,
+      defaultDate: this._event.dueDateEnd || addDateDay(new Date()),
+    }));
+
+    dateStartInput.addEventListener(`change`, (evt) => {
+      const defaultDateEnd = addDateDay(evt.target.value);
+
+      this._dateEndflatpickr.set(`minDate`, evt.target.value);
+      this._dateEndflatpickr.setDate(defaultDateEnd);
     });
   }
 
