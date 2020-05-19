@@ -160,41 +160,53 @@ export default class TripController {
   _onDataChange(eventController, oldData, newData) {
     if (oldData === emptyEvent) {
       this._creatingEvent = null;
+
       if (newData === null) {
         eventController.destroy();
-        this._updateEvents();
       } else {
-        this._addNewEvent(newData);
+        this._addNewEvent(eventController, newData);
       }
     } else if (newData === null) {
-      this._removeEvent(oldData.id);
+      this._removeEvent(eventController, oldData.id);
     } else {
       this._updateEvent(eventController, oldData, newData);
     }
   }
 
-  _removeEvent(id) {
-    this._eventsModel.removeEvent(id);
-    this._updateEvents();
+  _removeEvent(eventController, id) {
+    this._api.deleteEvent(id)
+      .then(() => {
+        this._eventsModel.removeEvent(id);
+        this._updateEvents();
+      })
+      .catch(() => {
+        eventController.shake();
+      });
   }
 
-  _addNewEvent(newData) {
-    this._eventsModel.addEvent(newData);
-    this._updateEvents();
+  _addNewEvent(eventController, newData) {
+    this._api.createEvent(newData)
+      .then((eventModel) => {
+        this._eventsModel.addEvent(eventModel);
+        eventController.destroy();
+        this._updateEvents();
+      })
+      .catch(() => {
+        eventController.shake();
+      });
   }
 
   _updateEvent(eventController, oldData, newData) {
-    const offers = this._offersModel.getOffers();
-    const destinations = this._destinationsModel.getDestinations();
-
     this._api.updateEvent(oldData.id, newData)
       .then((eventModel) => {
         const isSuccess = this._eventsModel.updateEvent(oldData.id, eventModel);
 
         if (isSuccess) {
-          eventController.render(eventModel, offers, destinations, EventControllerMode.DEFAULT);
           this._updateEvents();
         }
+      })
+      .catch(() => {
+        eventController.shake();
       });
   }
 
