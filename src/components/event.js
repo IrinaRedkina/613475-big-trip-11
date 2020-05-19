@@ -1,9 +1,9 @@
 import {formatTime, formatDate, getTimeInterval} from '../utils/date';
-import {toUpperCaseFirstLetter} from '../utils/common';
-import {types} from '../mock/event';
+import {toUpperCaseFirstLetter, getTypeGroup} from '../utils/common';
+import {placeholderGroup} from '../const';
 import AbstractComponent from './abstract-component';
 
-const MAX_LENGTH_TITLE = 17;
+const MAX_LENGTH_TITLE = 15;
 const MAX_COUNT_OPTIONS = 3;
 
 const createOfferMarkup = (option) => {
@@ -20,10 +20,10 @@ const createOfferMarkup = (option) => {
 };
 
 const createEventTemplate = (event) => {
-  const {type, city, price, options, selectedOptions, dueDateStart, dueDateEnd} = event;
+  const {type, destination, price, options, dueDateStart, dueDateEnd} = event;
 
-  const typeData = types[type];
-  const title = `${toUpperCaseFirstLetter(type)} ${typeData[`placeholder`]} ${city}`;
+  const placeholder = placeholderGroup[getTypeGroup(type)];
+  const title = `${toUpperCaseFirstLetter(type)} ${placeholder} ${destination[`name`]}`;
 
   const dateStart = formatDate(dueDateStart);
   const dateEnd = formatDate(dueDateEnd);
@@ -31,9 +31,9 @@ const createEventTemplate = (event) => {
   const timeEnd = formatTime(dueDateEnd);
   const duration = getTimeInterval(dueDateStart, dueDateEnd);
 
-  const isShowingOptions = Object.values(selectedOptions).some(Boolean);
+  const isShowingOptions = options.length;
+
   const offersMarkup = options ? options
-    .filter((option) => selectedOptions[option.id])
     .map((option) => createOfferMarkup(option))
     .slice(0, MAX_COUNT_OPTIONS)
     .join(`\n`) : ``;

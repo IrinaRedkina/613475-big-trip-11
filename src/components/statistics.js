@@ -1,8 +1,8 @@
 import AbstractSmartComponent from "./abstract-smart-component.js";
 import Chart from "chart.js";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import {types} from '../mock/event';
 import moment from 'moment';
+import {getTypeGroup} from '../utils/common';
 
 const BAR_HEIGHT = 45;
 
@@ -101,7 +101,7 @@ const getPriceForTypes = (events) => {
 
 const getCountForTransports = (events) => {
   const transports = events
-    .filter((event) => types[event.type].group === `transfer`)
+    .filter((event) => getTypeGroup(event.type) === `transfer`)
     .map((event) => event.type);
 
   return transports.reduce((acc, transport) => {

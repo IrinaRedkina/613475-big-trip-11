@@ -12,7 +12,7 @@ const getPrevDate = (prevEvent) => {
   return prevEvent ? prevEvent.dueDateStart : new Date(0);
 };
 
-const renderEventsByDays = (events, daysList, onDataChange, onViewChange) => {
+const renderEventsByDays = (events, offers, destinations, daysList, onDataChange, onViewChange) => {
   let dayCount = 1;
   let eventsList = null;
 
@@ -32,13 +32,13 @@ const renderEventsByDays = (events, daysList, onDataChange, onViewChange) => {
     }
 
     const eventController = new EventController(eventsList, onDataChange, onViewChange);
-    eventController.render(event, EventControllerMode.DEFAULT);
+    eventController.render(event, offers, destinations, EventControllerMode.DEFAULT);
 
     return eventController;
   });
 };
 
-const renderEventsSorted = (events, daysList, onDataChange, onViewChange) => {
+const renderEventsSorted = (events, offers, destinations, daysList, onDataChange, onViewChange) => {
   const dayComponent = new DayComponent();
   const dayListComponent = new DayListComponent();
   const eventsList = dayListComponent.getElement();
@@ -48,29 +48,33 @@ const renderEventsSorted = (events, daysList, onDataChange, onViewChange) => {
 
   return events.map((event) => {
     const eventController = new EventController(eventsList, onDataChange, onViewChange);
-    eventController.render(event, EventControllerMode.DEFAULT);
+    eventController.render(event, offers, destinations, EventControllerMode.DEFAULT);
 
     return eventController;
   });
 };
 
-const renderEvents = (events, daysList, isBreakByDay, onDataChange, onViewChange) => {
+const renderEvents = (events, offers, destinations, daysList, isBreakByDay, onDataChange, onViewChange) => {
   let eventControllers = [];
 
   if (isBreakByDay) {
-    eventControllers = renderEventsByDays(events, daysList, onDataChange, onViewChange);
+    eventControllers = renderEventsByDays(events, offers, destinations, daysList, onDataChange, onViewChange);
   } else {
-    eventControllers = renderEventsSorted(events, daysList, onDataChange, onViewChange);
+    eventControllers = renderEventsSorted(events, offers, destinations, daysList, onDataChange, onViewChange);
   }
 
   return eventControllers;
 };
 
 export default class TripController {
-  constructor(container, eventsModel) {
+  constructor(container, eventsModel, offerModel, destinationsModel, api) {
     this._container = container;
     this._eventsModel = eventsModel;
+    this._offersModel = offerModel;
+    this._destinationsModel = destinationsModel;
     this._eventControllers = [];
+
+    this._api = api;
 
     this._activeSortType = SortType.DEFAULT;
     this._eventsEmptyComponent = new EventsEmptyComponent();
@@ -128,7 +132,10 @@ export default class TripController {
     const sortedEvents = this._getSortedEvents(events, this._activeSortType);
     const isBreakByDay = this._activeSortType === SortType.DEFAULT;
 
-    this._eventControllers = renderEvents(sortedEvents, this._daysList, isBreakByDay, this._onDataChange, this._onViewChange);
+    const offers = this._offersModel.getOffers();
+    const destinations = this._destinationsModel.getDestinations();
+
+    this._eventControllers = renderEvents(sortedEvents, offers, destinations, this._daysList, isBreakByDay, this._onDataChange, this._onViewChange);
   }
 
   _getSortedEvents(events, sortType) {
@@ -162,7 +169,7 @@ export default class TripController {
     } else if (newData === null) {
       this._removeEvent(oldData.id);
     } else {
-      this._updateEvent(oldData, newData);
+      this._updateEvent(eventController, oldData, newData);
     }
   }
 
@@ -176,12 +183,19 @@ export default class TripController {
     this._updateEvents();
   }
 
-  _updateEvent(oldData, newData) {
-    const isSuccess = this._eventsModel.updateEvent(oldData.id, newData);
+  _updateEvent(eventController, oldData, newData) {
+    const offers = this._offersModel.getOffers();
+    const destinations = this._destinationsModel.getDestinations();
 
-    if (isSuccess) {
-      this._updateEvents();
-    }
+    this._api.updateEvent(oldData.id, newData)
+      .then((eventModel) => {
+        const isSuccess = this._eventsModel.updateEvent(oldData.id, eventModel);
+
+        if (isSuccess) {
+          eventController.render(eventModel, offers, destinations, EventControllerMode.DEFAULT);
+          this._updateEvents();
+        }
+      });
   }
 
   createEvent() {
@@ -192,8 +206,11 @@ export default class TripController {
     this._updateEvents();
     this._eventsModel.resetFilter();
 
+    const offers = this._offersModel.getOffers();
+    const destinations = this._destinationsModel.getDestinations();
+
     this._creatingEvent = new EventController(this._container, this._onDataChange, this._onViewChange);
-    this._creatingEvent.render(emptyEvent, EventControllerMode.ADDING, this._daysList);
+    this._creatingEvent.render(emptyEvent, offers, destinations, EventControllerMode.ADDING, this._daysList);
   }
 
   _onFilterChange() {
