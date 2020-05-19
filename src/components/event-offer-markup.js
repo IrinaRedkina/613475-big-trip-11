@@ -1,5 +1,5 @@
-const createOfferMarkup = (option, isSelected) => {
-  const {id, title, price} = option;
+const createOfferMarkup = (id, option, isSelected) => {
+  const {title, price} = option;
 
   return (
     `<div class="event__offer-selector">
@@ -8,8 +8,8 @@ const createOfferMarkup = (option, isSelected) => {
         id="event-offer-${id}"
         type="checkbox"
         name="event-offer"
-        value="${id}"
-        data-option="${id}"
+        value="${title}|${price}"
+        data-option-title="${title}"
         ${isSelected ? `checked` : ``}
       >
       <label class="event__offer-label" for="event-offer-${id}">
@@ -21,9 +21,11 @@ const createOfferMarkup = (option, isSelected) => {
   );
 };
 
-export const createOffersMarkup = (options, selectedOptions) => {
-  const offersMarkup = options
-    .map((option) => createOfferMarkup(option, selectedOptions[option.id]))
+export const createOffersMarkup = (selectedOffers, availableOffers) => {
+  const selected = selectedOffers.map((offers) => offers.title);
+
+  const offersMarkup = availableOffers
+    .map((offer, i) => createOfferMarkup(i, offer, selected.includes(offer.title)))
     .join(`\n`);
 
   return (

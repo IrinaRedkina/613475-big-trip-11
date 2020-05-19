@@ -1,5 +1,5 @@
-import {types, typeList, TypePlaceholder} from '../mock/event';
-import {toUpperCaseFirstLetter} from "../utils/common";
+import {toUpperCaseFirstLetter} from '../utils/common';
+import {placeholderGroup, typesByGroup} from '../const';
 
 const createTypeMarkup = (typeName, isSelected, group) => {
   return (
@@ -9,7 +9,7 @@ const createTypeMarkup = (typeName, isSelected, group) => {
         class="event__type-input visually-hidden"
         type="radio"
         name="event-type"
-        data-placeholder="${TypePlaceholder[group]}"
+        data-placeholder="${placeholderGroup[group]}"
         value="${typeName}"
         ${isSelected ? `checked` : ``}
       >
@@ -19,8 +19,7 @@ const createTypeMarkup = (typeName, isSelected, group) => {
 };
 
 const createGroupMarkup = (group, selectedType) => {
-  const typeListMarpkup = typeList
-    .filter((type) => types[type][`group`] === group)
+  const typeListMarpkup = typesByGroup[group]
     .map((type) => createTypeMarkup(type, type === selectedType, group))
     .join(`\n`);
 
@@ -33,7 +32,7 @@ const createGroupMarkup = (group, selectedType) => {
 };
 
 export const createTypeListMarkup = (selectedType) => {
-  const groups = new Set(typeList.map((type) => types[type][`group`]));
+  const groups = Object.keys(typesByGroup);
   let groupsMarkup = ``;
 
   groups.forEach((group) => {

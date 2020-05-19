@@ -1,8 +1,8 @@
 import EventComponent from '../components/event';
 import EditEventComponent from '../components/event-edit';
+import EventModel from '../models/event-adapter';
 import {Key} from '../utils/common';
 import {RenderPosition, render, replace, remove} from '../utils/render';
-import {types, getAvailableOptions} from '../mock/event';
 
 export const Mode = {
   ADDING: `adding`,
@@ -10,17 +10,41 @@ export const Mode = {
   EDIT: `edit`
 };
 
-const emptyEventType = `flight`;
+const parseFormData = (formData, destinations) => {
+  const dateStart = formData.get(`event-start-time`);
+  const dateEnd = formData.get(`event-end-time`);
+
+  const city = formData.get(`event-destination`);
+  const destination = destinations.filter((it) => it.name === city)[0];
+
+  const options = formData.getAll(`event-offer`).map((option) => {
+    const optionData = option.split(`|`);
+
+    return {
+      title: optionData[0],
+      price: Number(optionData[1])
+    };
+  });
+
+  return new EventModel({
+    "base_price": formData.get(`event-price`),
+    "date_from": dateStart ? new Date(dateStart) : null,
+    "date_to": dateEnd ? new Date(dateEnd) : null,
+    "is_favorite": !!formData.get(`event-favorite`),
+    "type": formData.get(`event-type`),
+    "destination": destination,
+    "offers": options
+  });
+};
+
 export const emptyEvent = {
-  type: emptyEventType,
-  city: ``,
-  destination: null,
-  options: getAvailableOptions(types[emptyEventType].offers),
-  selectedOptions: {},
-  price: 0,
+  type: `transport`,
+  price: ``,
   isFavorite: false,
   dueDateStart: null,
   dueDateEnd: null,
+  options: [],
+  destination: []
 };
 
 export default class EventController {
@@ -38,12 +62,12 @@ export default class EventController {
     this._onEscKeyDown = this._onEscKeyDown.bind(this);
   }
 
-  render(event, mode, beforeElement = null) {
+  render(event, offers, destinations, mode, beforeElement = null) {
     const oldEventComponent = this._eventComponent;
     const oldEventEditComponent = this._eventEditComponent;
 
-    this._eventComponent = new EventComponent(event);
-    this._eventEditComponent = new EditEventComponent(event, mode);
+    this._eventComponent = new EventComponent(event, offers, destinations);
+    this._eventEditComponent = new EditEventComponent(event, offers, destinations, mode);
     this._mode = mode;
 
     this._eventComponent.setClickEditHandler(() => {
@@ -59,7 +83,9 @@ export default class EventController {
     this._eventEditComponent.setSubmitHandler((evt) => {
       evt.preventDefault();
 
-      const data = this._eventEditComponent.getData();
+      const formData = this._eventEditComponent.getData();
+      const data = parseFormData(formData, destinations);
+
       this._onDataChange(this, event, data);
 
       if (this._mode === Mode.ADDING) {
