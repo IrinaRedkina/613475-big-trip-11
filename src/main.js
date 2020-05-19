@@ -81,4 +81,3 @@ api.getData()
 
     tripRouteController.render();
   });
-
