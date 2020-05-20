@@ -3,7 +3,7 @@ import {createTypeListMarkup} from './event-type-markup';
 import {createOffersMarkup} from './event-offer-markup';
 import {createCitiesMarkup, createDestinationMarkup} from './event-destination-markup';
 import {toUpperCaseFirstLetter, getTypeGroup} from '../utils/common';
-import {addDateDay} from '../utils/date';
+import {addOneDay} from '../utils/date';
 import {placeholderGroup} from '../const';
 import {Mode as EventControllerMode} from '../controllers/event';
 import flatpickr from 'flatpickr';
@@ -242,21 +242,14 @@ export default class EditEvent extends AbstractSmartComponent {
       enableTime: true,
       altInput: true,
       altFormat: `d/m/Y H:i`,
-      defaultDate: this._event.dueDateStart || `today`,
+      defaultDate: this._dueDateStart || `today`,
     };
 
     this._dateStartflatpickr = flatpickr(dateStartInput, Object.assign({}, options));
     this._dateEndflatpickr = flatpickr(dateEndInput, Object.assign({}, options, {
       minDate: dateStartInput.value,
-      defaultDate: this._event.dueDateEnd || addDateDay(new Date()),
+      defaultDate: this._dueDateEnd || addOneDay(new Date()),
     }));
-
-    dateStartInput.addEventListener(`change`, (evt) => {
-      const defaultDateEnd = addDateDay(evt.target.value);
-
-      this._dateEndflatpickr.set(`minDate`, evt.target.value);
-      this._dateEndflatpickr.setDate(defaultDateEnd);
-    });
   }
 
   _subscribeOnEvents() {
@@ -264,6 +257,7 @@ export default class EditEvent extends AbstractSmartComponent {
 
     this._setTypeEvent(element);
     this._setOptions(element);
+    this._setDates(element);
     this._validateDestination(element);
     this._validatePrice(element);
 
@@ -307,6 +301,22 @@ export default class EditEvent extends AbstractSmartComponent {
         this.rerender();
       });
     }
+  }
+
+  _setDates(element) {
+    const dateStartInput = element.querySelector(`input[name=event-start-time]`);
+
+    dateStartInput.addEventListener(`change`, (evt) => {
+      const defaultDateEnd = addOneDay(evt.target.value);
+
+      this._dateEndflatpickr.set(`minDate`, evt.target.value);
+      this._dateEndflatpickr.setDate(defaultDateEnd);
+
+      this._dueDateStart = new Date(evt.target.value);
+      this._dueDateEnd = addOneDay(this._dueDateStart);
+
+      this.rerender();
+    });
   }
 
   _setDestination(city) {

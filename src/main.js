@@ -8,10 +8,11 @@ import TripRouteController from './controllers/trip-route';
 import TripInfoController from './controllers/trip-info';
 import FilterController from './controllers/filter';
 import MenuComponent from './components/menu';
-import {MenuItem} from './components/menu';
 import StatisticsComponent from './components/statistics';
 import LoadingComponent from './components/loading';
+import {MenuItem} from './components/menu';
 import {RenderPosition, render} from './utils/render';
+import {addEventButton} from './const';
 
 const AUTHORIZATION = `Basic MyH4ckBwZXMzd32yZA6+`;
 const END_POINT = `https://11.ecmascript.pages.academy/big-trip`;
@@ -54,8 +55,9 @@ const loadingComponent = new LoadingComponent();
 render(pageContainer, loadingComponent, RenderPosition.BEFOREEND);
 
 // клик по кнопке New event
-const addEventButton = siteHeaderContainer.querySelector(`.trip-main__event-add-btn`);
-addEventButton.addEventListener(`click`, () => {
+addEventButton.addEventListener(`click`, (evt) => {
+  evt.target.setAttribute(`disabled`, `disabled`);
+  evt.target.blur();
   tripRouteController.createEvent();
 });
 

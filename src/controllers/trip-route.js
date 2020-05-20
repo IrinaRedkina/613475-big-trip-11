@@ -7,6 +7,7 @@ import EventsEmptyComponent from '../components/events-empty';
 import {RenderPosition, render, replace} from '../utils/render';
 import {Mode as EventControllerMode, emptyEvent} from './event';
 import EventController from './event';
+import {addEventButton} from '../const';
 
 const getPrevDate = (prevEvent) => {
   return prevEvent ? prevEvent.dueDateStart : new Date(0);
@@ -163,6 +164,7 @@ export default class TripController {
 
       if (newData === null) {
         eventController.destroy();
+        addEventButton.removeAttribute(`disabled`);
       } else {
         this._addNewEvent(eventController, newData);
       }
@@ -189,6 +191,7 @@ export default class TripController {
       .then((eventModel) => {
         this._eventsModel.addEvent(eventModel);
         eventController.destroy();
+        addEventButton.removeAttribute(`disabled`);
         this._updateEvents();
       })
       .catch(() => {

@@ -26,3 +26,5 @@ export const placeholderGroup = {
   'transfer': `to`,
   'activity': `in`
 };
+
+export const addEventButton = document.querySelector(`.trip-main__event-add-btn`);

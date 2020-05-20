@@ -12,7 +12,7 @@ export const castFormat = (value) => {
   return value < 10 ? `0${value}` : String(value);
 };
 
-export const addDateDay = (date) => {
+export const addOneDay = (date) => {
   return moment(date).add(`days`, 1).format(`Y-MM-DD hh:mm`);
 };
 
