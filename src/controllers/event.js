@@ -119,6 +119,7 @@ export default class EventController {
           remove(oldEventComponent);
           remove(oldEventEditComponent);
         }
+
         document.addEventListener(`keydown`, this._onEscKeyDown);
         render(this._container, this._eventEditComponent, RenderPosition.INSERTBEFORE, beforeElement);
         this._eventEditComponent.initFlatpickr();

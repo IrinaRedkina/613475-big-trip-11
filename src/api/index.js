@@ -1,4 +1,4 @@
-import EventAdapter from "./models/event-adapter.js";
+import EventAdapter from '../models/event-adapter.js';
 
 const Method = {
   GET: `GET`,
@@ -21,6 +21,16 @@ const API = class {
     this._authorization = authorization;
   }
 
+  sync(data) {
+    return this._load({
+      url: `points/sync`,
+      method: Method.POST,
+      body: JSON.stringify(data),
+      headers: new Headers({"Content-Type": `application/json`})
+    })
+      .then((response) => response.json());
+  }
+
   getEvents() {
     return this._load({url: `points`})
       .then((response) => response.json())
@@ -37,23 +47,11 @@ const API = class {
       .then((response) => response.json());
   }
 
-  getData() {
-    return Promise.all([
-      this.getEvents(),
-      this.getOffers(),
-      this.getDestinations()
-    ])
-      .then((response) => {
-        const [events, offers, destinations] = response;
-        return {events, offers, destinations};
-      });
-  }
-
-  updateEvent(id, data) {
+  updateEvent(id, event) {
     return this._load({
       url: `points/${id}`,
       method: Method.PUT,
-      body: JSON.stringify(data.toRAW()),
+      body: JSON.stringify(event.toRAW()),
       headers: new Headers({"Content-Type": `application/json`})
     })
       .then((response) => response.json())
