@@ -1,4 +1,6 @@
-import API from "./api.js";
+import API from './api/index.js';
+import Provider from './api/provider';
+import Store from './api/store';
 import EventsModel from './models/events';
 import OffersModel from './models/offers';
 import DestinationsModel from './models/destinations';
@@ -13,8 +15,11 @@ import {RenderPosition, render} from './utils/render';
 
 const AUTHORIZATION = `Basic MyH4ckBwZXMzd32yZA6+`;
 const END_POINT = `https://11.ecmascript.pages.academy/big-trip`;
+const OFFLINE_TITLE = `[offline]`;
 
 const api = new API(END_POINT, AUTHORIZATION);
+const store = new Store(window.localStorage);
+const apiWithProvider = new Provider(api, store);
 const eventsModel = new EventsModel();
 const offersModel = new OffersModel();
 const destinationsModel = new DestinationsModel();
@@ -36,7 +41,7 @@ filterController.render();
 
 // список точек маршрута
 const tripRouteContainer = document.querySelector(`.trip-events`);
-const tripRouteController = new TripRouteController(tripRouteContainer, eventsModel, offersModel, destinationsModel, api);
+const tripRouteController = new TripRouteController(tripRouteContainer, eventsModel, offersModel, destinationsModel, apiWithProvider);
 
 // статистика
 const pageContainer = document.querySelector(`.page-body__page-main .page-body__container`);
@@ -70,14 +75,38 @@ menuComponent.setOnChange((menuItem) => {
   }
 });
 
-api.getData()
-  .then((data) => {
-    loadingComponent.getElement().remove();
-    loadingComponent.removeElement();
+Promise.all([
+  apiWithProvider.getEvents(),
+  apiWithProvider.getOffers(),
+  apiWithProvider.getDestinations()
+]).then((response) => {
+  const [events, offers, destinations] = response;
 
-    eventsModel.setEvents(data[`events`]);
-    offersModel.setOffers(data[`offers`]);
-    destinationsModel.setOffers(data[`destinations`]);
+  loadingComponent.getElement().remove();
+  loadingComponent.removeElement();
 
-    tripRouteController.render();
-  });
+  eventsModel.setEvents(events);
+  offersModel.setOffers(offers);
+  destinationsModel.setOffers(destinations);
+
+  tripRouteController.render();
+});
+
+window.addEventListener(`load`, () => {
+  navigator.serviceWorker.register(`/sw.js`)
+    .then(() => {
+      // Действие, в случае успешной регистрации SW
+    }).catch(() => {
+      // Действие, в случае ошибки при регистрации SW
+    });
+});
+
+window.addEventListener(`online`, () => {
+  document.title = document.title.replace(` ${OFFLINE_TITLE}`, ``);
+
+  apiWithProvider.sync();
+});
+
+window.addEventListener(`offline`, () => {
+  document.title += ` ${OFFLINE_TITLE}`;
+});
