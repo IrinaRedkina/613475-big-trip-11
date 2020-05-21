@@ -1,12 +1,6 @@
 import AbstractComponent from './abstract-component';
 
-const FILTER_ID_PREFIX = `filter-`;
-
-const getFilterNameById = (id) => {
-  return id.substring(FILTER_ID_PREFIX.length);
-};
-
-const createFilterMarkup = (filterName, isCheked) => {
+const createFilterMarkup = (filterName, isCheked, isDisabled) => {
   return (
     `<div class="trip-filters__filter">
       <input
@@ -16,6 +10,7 @@ const createFilterMarkup = (filterName, isCheked) => {
         name="trip-filter"
         value="${filterName}"
         ${isCheked ? `checked` : ``}
+        ${isDisabled ? `disabled` : ``}
       >
       <label class="trip-filters__filter-label" for="filter-${filterName}">${filterName}</label>
     </div>`
@@ -23,7 +18,7 @@ const createFilterMarkup = (filterName, isCheked) => {
 };
 
 const createFilterTemplate = (filters) => {
-  const filtersMarkups = filters.map((filter) => createFilterMarkup(filter.name, filter.isChecked)).join(`\n`);
+  const filtersMarkups = filters.map((filter) => createFilterMarkup(filter.name, filter.isChecked, filter.disabled)).join(`\n`);
 
   return (
     `<form class="trip-filters" action="#" method="get">
@@ -46,8 +41,7 @@ export default class Filter extends AbstractComponent {
 
   setFilterChangeHandler(handler) {
     this.getElement().addEventListener(`change`, (evt) => {
-      const filterName = getFilterNameById(evt.target.id);
-      handler(filterName);
+      handler(evt.target.value);
     });
   }
 }

@@ -11,7 +11,7 @@ import MenuComponent from './components/menu';
 import StatisticsComponent from './components/statistics';
 import LoadingComponent from './components/loading';
 import {MenuItem} from './components/menu';
-import {RenderPosition, render} from './utils/render';
+import {RenderPosition, render, remove} from './utils/render';
 import {addEventButton} from './const';
 
 const AUTHORIZATION = `Basic MyH4ckBwZXMzd32yZA6+`;
@@ -21,47 +21,37 @@ const OFFLINE_TITLE = `[offline]`;
 const api = new API(END_POINT, AUTHORIZATION);
 const store = new Store(window.localStorage);
 const apiWithProvider = new Provider(api, store);
+
 const eventsModel = new EventsModel();
 const offersModel = new OffersModel();
 const destinationsModel = new DestinationsModel();
 
-// Информация о путешествии, Общая стоимость
 const siteHeaderContainer = document.querySelector(`.trip-main`);
-const tripHeaderController = new TripInfoController(siteHeaderContainer, eventsModel);
-tripHeaderController.render();
-
-// меню
 const controlsContainer = siteHeaderContainer.querySelector(`.trip-controls`);
 const menuTitle = siteHeaderContainer.querySelector(`h2:last-child`);
-const menuComponent = new MenuComponent();
-render(controlsContainer, menuComponent, RenderPosition.INSERTBEFORE, menuTitle);
-
-// фильтры
-const filterController = new FilterController(controlsContainer, eventsModel);
-filterController.render();
-
-// список точек маршрута
 const tripRouteContainer = document.querySelector(`.trip-events`);
-const tripRouteController = new TripRouteController(tripRouteContainer, eventsModel, offersModel, destinationsModel, apiWithProvider);
-
-// статистика
 const pageContainer = document.querySelector(`.page-body__page-main .page-body__container`);
+
+const menuComponent = new MenuComponent();
+const loadingComponent = new LoadingComponent();
 const statisticsComponent = new StatisticsComponent(eventsModel);
+
+const tripRouteController = new TripRouteController(tripRouteContainer, eventsModel, offersModel, destinationsModel, apiWithProvider);
+const tripInfoController = new TripInfoController(siteHeaderContainer, eventsModel);
+const filterController = new FilterController(controlsContainer, eventsModel);
+
+render(controlsContainer, menuComponent, RenderPosition.INSERTBEFORE, menuTitle);
 render(pageContainer, statisticsComponent, RenderPosition.BEFOREEND);
+render(pageContainer, loadingComponent, RenderPosition.BEFOREEND);
+filterController.render();
 statisticsComponent.hide();
 
-// loading
-const loadingComponent = new LoadingComponent();
-render(pageContainer, loadingComponent, RenderPosition.BEFOREEND);
-
-// клик по кнопке New event
 addEventButton.addEventListener(`click`, (evt) => {
   evt.target.setAttribute(`disabled`, `disabled`);
   evt.target.blur();
   tripRouteController.createEvent();
 });
 
-// смена пунктов меню
 menuComponent.setOnChange((menuItem) => {
   switch (menuItem) {
     case MenuItem.TRIP:
@@ -84,14 +74,14 @@ Promise.all([
 ]).then((response) => {
   const [events, offers, destinations] = response;
 
-  loadingComponent.getElement().remove();
-  loadingComponent.removeElement();
+  remove(loadingComponent);
 
   eventsModel.setEvents(events);
   offersModel.setOffers(offers);
-  destinationsModel.setOffers(destinations);
+  destinationsModel.setDestinations(destinations);
 
   tripRouteController.render();
+  tripInfoController.render();
 });
 
 window.addEventListener(`load`, () => {

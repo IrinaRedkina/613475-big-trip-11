@@ -4,10 +4,11 @@ import DaysComponent from '../components/days';
 import DayComponent from '../components/day';
 import DayListComponent from '../components/day-list';
 import EventsEmptyComponent from '../components/events-empty';
-import {RenderPosition, render, replace} from '../utils/render';
-import {Mode as EventControllerMode, emptyEvent} from './event';
 import EventController from './event';
+import {RenderPosition, render, replace, remove} from '../utils/render';
+import {Mode as EventControllerMode, emptyEvent} from './event';
 import {addEventButton} from '../const';
+import {sortEventsByDays} from '../utils/common';
 
 const getPrevDate = (prevEvent) => {
   return prevEvent ? prevEvent.dueDateStart : new Date(0);
@@ -151,7 +152,7 @@ export default class TripController {
         sortedEvents = showingEvents.sort((a, b) => b.price - a.price);
         break;
       case SortType.DEFAULT:
-        sortedEvents = showingEvents.sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
+        sortedEvents = sortEventsByDays(showingEvents);
         break;
     }
 
@@ -179,7 +180,13 @@ export default class TripController {
     this._api.deleteEvent(id)
       .then(() => {
         this._eventsModel.removeEvent(id);
+
         this._updateEvents();
+
+        if (this._eventsModel.getEvents().length === 0) {
+          remove(this._sortComponent);
+          render(this._container, this._eventsEmptyComponent, RenderPosition.BEFOREEND);
+        }
       })
       .catch(() => {
         eventController.shake();
@@ -221,8 +228,15 @@ export default class TripController {
     this._updateEvents();
     this._eventsModel.resetFilter();
 
+    const container = this._container;
     const offers = this._offersModel.getOffers();
     const destinations = this._destinationsModel.getDestinations();
+
+    if (this._eventsModel.getEvents().length === 0) {
+      remove(this._eventsEmptyComponent);
+      render(container, this._sortComponent, RenderPosition.BEFOREEND);
+      render(container, this._daysComponent, RenderPosition.BEFOREEND);
+    }
 
     this._creatingEvent = new EventController(this._container, this._onDataChange, this._onViewChange);
     this._creatingEvent.render(emptyEvent, offers, destinations, EventControllerMode.ADDING, this._daysList);

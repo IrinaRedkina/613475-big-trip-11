@@ -1,12 +1,12 @@
 import AbstractComponent from './abstract-component';
 
+const SORT_BY_DAY_TEXT = `Day`;
+
 export const SortType = {
   DEFAULT: `event`,
   TIME: `time`,
   PRICE: `price`,
 };
-
-const SORT_BY_DAY_TEXT = `Day`;
 
 const createSortMarkup = (sortType, isChecked) => {
   return (

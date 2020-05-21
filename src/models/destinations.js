@@ -7,7 +7,7 @@ export default class Destinations {
     return this._destinations;
   }
 
-  setOffers(destinations) {
+  setDestinations(destinations) {
     this._destinations = Array.from(destinations);
   }
 }

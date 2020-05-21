@@ -1,44 +1,47 @@
-import InfoComponent from '../components/info';
 import TripInfoComponent from '../components/trip-info';
-import CostComponent from '../components/cost';
-import {RenderPosition, render} from '../utils/render';
+import {RenderPosition, render, replace} from '../utils/render';
+import {sortEventsByDays, getFirstElement, getLastElement} from '../utils/common';
+
+const getOptionsTotalSum = (options) => {
+  return options.reduce((acc, option) => acc + option.price, 0);
+};
+
+const getTotalPrice = (events) => {
+  return events.reduce((acc, event) => acc + event.price + getOptionsTotalSum(event.options), 0);
+};
 
 export default class TripInfoController {
   constructor(container, eventsModel) {
     this._container = container;
     this._eventsModel = eventsModel;
 
-    this._infoComponent = new InfoComponent();
-    this._costComponent = null;
     this._tripInfoComponent = null;
+
+    this._onDataChange = this._onDataChange.bind(this);
+    this._eventsModel.setDataChangeHandler(this._onDataChange);
+  }
+
+  _onDataChange() {
+    this.render();
   }
 
   render() {
-    const events = this._eventsModel.getEvents();
     const container = this._container;
+    const events = this._eventsModel.getEvents();
+    const eventsByDays = sortEventsByDays(events.slice());
 
-    const totalPrice = this._getTotalPrice(events);
-    this._costComponent = this._costComponent = new CostComponent(totalPrice);
+    const totalPrice = getTotalPrice(events);
+    const tripDateStart = events.length ? getFirstElement(eventsByDays).dueDateStart : null;
+    const tirpDateEnd = events.length ? getLastElement(eventsByDays).dueDateEnd : null;
+    const routePoints = eventsByDays.map((item) => item.destination.name);
 
-    render(container, this._infoComponent, RenderPosition.AFTERBEGIN);
-    render(this._infoComponent.getElement(), this._costComponent, RenderPosition.BEFOREEND);
+    const oldTripInfoComponent = this._tripInfoComponent;
+    this._tripInfoComponent = new TripInfoComponent(totalPrice, tripDateStart, tirpDateEnd, routePoints);
 
-    if (events.length > 0) {
-      const eventsByDays = events.slice().sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
-      const tripDateStart = eventsByDays[0].dueDateStart;
-      const tirpDateEnd = eventsByDays[eventsByDays.length - 1].dueDateEnd;
-      const routePoints = eventsByDays.map((item) => item.city);
-
-      this._tripInfoComponent = new TripInfoComponent(tripDateStart, tirpDateEnd, routePoints);
-      render(this._infoComponent.getElement(), this._tripInfoComponent, RenderPosition.AFTERBEGIN);
+    if (oldTripInfoComponent) {
+      replace(this._tripInfoComponent, oldTripInfoComponent);
+    } else {
+      render(container, this._tripInfoComponent, RenderPosition.AFTERBEGIN);
     }
-  }
-
-  _getTotalPrice(events) {
-    if (events.lenght) {
-      return 0;
-    }
-
-    return events.reduce((acc, event) => acc + event.price, 0);
   }
 }

@@ -8,8 +8,8 @@ export const MenuItem = {
 const createMenuTemplate = () => {
   return (
     `<nav class="trip-controls__trip-tabs trip-tabs">
-      <a class="trip-tabs__btn trip-tabs__btn--active" data-href="trip" href="#">Table</a>
-      <a class="trip-tabs__btn" data-href="stats" href="#">Stats</a>
+      <a class="trip-tabs__btn trip-tabs__btn--active" data-href="${MenuItem.TRIP}" href="#">Table</a>
+      <a class="trip-tabs__btn" data-href="${MenuItem.STATISTICS}" href="#">Stats</a>
     </nav>`
   );
 };
