@@ -14,7 +14,7 @@ import {MenuItem} from './components/menu';
 import {RenderPosition, render, remove} from './utils/render';
 import {addEventButton} from './const';
 
-const AUTHORIZATION = `Basic MyH4ckBwZXMzd32yZA6+`;
+const AUTHORIZATION = `Basic MyH4ckBwZXMzd32yKL6_`;
 const END_POINT = `https://11.ecmascript.pages.academy/big-trip`;
 const OFFLINE_TITLE = `[offline]`;
 
@@ -22,15 +22,15 @@ const api = new API(END_POINT, AUTHORIZATION);
 const store = new Store(window.localStorage);
 const apiWithProvider = new Provider(api, store);
 
-const eventsModel = new EventsModel();
-const offersModel = new OffersModel();
-const destinationsModel = new DestinationsModel();
-
 const siteHeaderContainer = document.querySelector(`.trip-main`);
 const controlsContainer = siteHeaderContainer.querySelector(`.trip-controls`);
 const menuTitle = siteHeaderContainer.querySelector(`h2:last-child`);
 const tripRouteContainer = document.querySelector(`.trip-events`);
 const pageContainer = document.querySelector(`.page-body__page-main .page-body__container`);
+
+const eventsModel = new EventsModel();
+const offersModel = new OffersModel();
+const destinationsModel = new DestinationsModel();
 
 const menuComponent = new MenuComponent();
 const loadingComponent = new LoadingComponent();
@@ -46,13 +46,7 @@ render(pageContainer, loadingComponent, RenderPosition.BEFOREEND);
 filterController.render();
 statisticsComponent.hide();
 
-addEventButton.addEventListener(`click`, (evt) => {
-  evt.target.setAttribute(`disabled`, `disabled`);
-  evt.target.blur();
-  tripRouteController.createEvent();
-});
-
-menuComponent.setOnChange((menuItem) => {
+const switchScreen = (menuItem) => {
   switch (menuItem) {
     case MenuItem.TRIP:
       menuComponent.setActiveItem(MenuItem.TRIP);
@@ -61,10 +55,24 @@ menuComponent.setOnChange((menuItem) => {
       break;
     case MenuItem.STATISTICS:
       menuComponent.setActiveItem(MenuItem.STATISTICS);
-      statisticsComponent.show();
       tripRouteController.hide();
+      statisticsComponent.show();
       break;
   }
+};
+
+menuComponent.setOnChange((menuItem) => {
+  switchScreen(menuItem);
+});
+
+addEventButton.addEventListener(`click`, (evt) => {
+  evt.target.setAttribute(`disabled`, `disabled`);
+  evt.target.blur();
+
+  switchScreen(MenuItem.TRIP);
+
+  filterController.resetFilter();
+  tripRouteController.createEvent();
 });
 
 Promise.all([

@@ -40,6 +40,13 @@ export default class FilterController {
     this._filterComponent.setFilterChangeHandler(this._onFilterChange);
   }
 
+  resetFilter() {
+    this._activeFilterType = FilterType.EVERYTHING;
+    this._eventsModel.setFilter(FilterType.EVERYTHING);
+
+    this.render();
+  }
+
   _onFilterChange(filterType) {
     this._eventsModel.setFilter(filterType);
     this._activeFilterType = filterType;

@@ -46,10 +46,6 @@ export default class Sort extends AbstractComponent {
     return createSortTemplate(this._currenSortType);
   }
 
-  setSortType(sortType) {
-    this._currenSortType = sortType;
-  }
-
   setSortTypeChangeHandler(handler) {
     this.getElement().addEventListener(`click`, (evt) => {
       if (!evt.target.dataset.sortType) {

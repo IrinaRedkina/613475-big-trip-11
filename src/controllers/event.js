@@ -12,6 +12,16 @@ export const Mode = {
   EDIT: `edit`
 };
 
+export const emptyEvent = {
+  type: `transport`,
+  price: ``,
+  isFavorite: false,
+  dueDateStart: null,
+  dueDateEnd: null,
+  options: [],
+  destination: []
+};
+
 const parseFormData = (formData, destinations) => {
   const dateStart = formData.get(`event-start-time`);
   const dateEnd = formData.get(`event-end-time`);
@@ -21,10 +31,12 @@ const parseFormData = (formData, destinations) => {
 
   const options = formData.getAll(`event-offer`).map((option) => {
     const optionData = option.split(`|`);
+    const title = optionData[0];
+    const price = optionData[1];
 
     return {
-      title: optionData[0],
-      price: Number(optionData[1])
+      title,
+      price: Number(price)
     };
   });
 
@@ -37,16 +49,6 @@ const parseFormData = (formData, destinations) => {
     "destination": destination,
     "offers": options
   });
-};
-
-export const emptyEvent = {
-  type: `transport`,
-  price: ``,
-  isFavorite: false,
-  dueDateStart: null,
-  dueDateEnd: null,
-  options: [],
-  destination: []
 };
 
 export default class EventController {
@@ -64,11 +66,11 @@ export default class EventController {
     this._onEscKeyDown = this._onEscKeyDown.bind(this);
   }
 
-  render(event, offers, destinations, mode, beforeElement = null) {
+  render(event, offers, destinations, mode = Mode.DEFAULT) {
     const oldEventComponent = this._eventComponent;
     const oldEventEditComponent = this._eventEditComponent;
 
-    this._eventComponent = new EventComponent(event, offers, destinations);
+    this._eventComponent = new EventComponent(event);
     this._eventEditComponent = new EditEventComponent(event, offers, destinations, mode);
     this._mode = mode;
 
@@ -121,7 +123,7 @@ export default class EventController {
         }
 
         document.addEventListener(`keydown`, this._onEscKeyDown);
-        render(this._container, this._eventEditComponent, RenderPosition.INSERTBEFORE, beforeElement);
+        render(this._container, this._eventEditComponent, RenderPosition.AFTERBEGIN);
         this._eventEditComponent.initFlatpickr();
         break;
     }
@@ -130,6 +132,7 @@ export default class EventController {
   destroy() {
     remove(this._eventComponent);
     remove(this._eventEditComponent);
+
     this._eventEditComponent.destroyFlatpickr();
     document.removeEventListener(`keydown`, this._onEscKeyDown);
   }
@@ -143,8 +146,8 @@ export default class EventController {
 
   _replaceEventToEdit() {
     this._onViewChange();
-    this._eventEditComponent.initFlatpickr();
     replace(this._eventEditComponent, this._eventComponent);
+    this._eventEditComponent.initFlatpickr();
     document.addEventListener(`keydown`, this._onEscKeyDown);
 
     this._mode = Mode.EDIT;
@@ -170,12 +173,12 @@ export default class EventController {
   }
 
   shake() {
-    this._eventEditComponent.getFormElement().style.animation = `shake ${SHAKE_ANIMATION_TIMEOUT / 1000}s`;
-    this._eventEditComponent.getFormElement().style.boxShadow = `0 0 5px red`;
+    this._eventEditComponent.getElement().style.animation = `shake ${SHAKE_ANIMATION_TIMEOUT / 1000}s`;
+    this._eventEditComponent.getElement().style.boxShadow = `0 0 5px red`;
 
     setTimeout(() => {
-      this._eventEditComponent.getFormElement().style.animation = ``;
-      this._eventEditComponent.getFormElement().style.boxShadow = ``;
+      this._eventEditComponent.getElement().style.animation = ``;
+      this._eventEditComponent.getElement().style.boxShadow = ``;
 
       this._eventEditComponent.setData({
         save: DefaultButtonText.save,

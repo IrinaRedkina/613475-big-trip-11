@@ -1,11 +1,11 @@
-import {StorageName} from '../const';
+import {StorageKey} from '../const';
 
 export default class Store {
   constructor(storage) {
     this._storage = storage;
   }
 
-  getItems(storageKey = StorageName.EVENTS) {
+  getItems(storageKey = StorageKey.EVENTS) {
     try {
       return JSON.parse(this._storage.getItem(storageKey)) || {};
     } catch (err) {
@@ -13,14 +13,14 @@ export default class Store {
     }
   }
 
-  setItems(items, storageKey = StorageName.EVENTS) {
+  setItems(items, storageKey = StorageKey.EVENTS) {
     this._storage.setItem(
         storageKey,
         JSON.stringify(items)
     );
   }
 
-  setItem(itemKey, value, storageKey = StorageName.EVENTS) {
+  setItem(itemKey, value, storageKey = StorageKey.EVENTS) {
     const store = this.getItems(storageKey);
 
     this._storage.setItem(
@@ -33,7 +33,7 @@ export default class Store {
     );
   }
 
-  removeItem(itemKey, storageKey = StorageName.EVENTS) {
+  removeItem(itemKey, storageKey = StorageKey.EVENTS) {
     const store = this.getItems(storageKey);
 
     delete store[itemKey];

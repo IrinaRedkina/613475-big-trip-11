@@ -1,4 +1,4 @@
-import {typesByGroup} from '../const';
+import {typesByGroup, TypeGroup} from '../const';
 
 export const Key = {
   ENTER: `Enter`,
@@ -12,7 +12,7 @@ export const toUpperCaseFirstLetter = (string) => {
 };
 
 export const getTypeGroup = (type) => {
-  return typesByGroup[`transfer`].includes(type) ? `transfer` : `activity`;
+  return typesByGroup[TypeGroup.TRANSFER].includes(type) ? TypeGroup.TRANSFER : TypeGroup.ACTIVITI;
 };
 
 export const sortEventsByDays = (events) => {

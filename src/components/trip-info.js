@@ -26,10 +26,10 @@ const getDateString = (dateStart, dateEnd) => {
   return `${formattedDateStart} ${separation} ${isOneDate ? `` : formattedDateEnd}`;
 };
 
-const createTripInfoTemplate = (totalPrice, tripDateStart, tripDateEnd, routePoints) => {
+const createTripInfoTemplate = (totalPrice, tripDateStart, tripDateEnd, points) => {
   const sum = totalPrice ? totalPrice : 0;
   const dateString = tripDateStart && tripDateEnd ? getDateString(tripDateStart, tripDateEnd) : ``;
-  const cities = routePoints.filter((city, i, items) => city !== items[i - 1]);
+  const cities = points.filter((city, i, items) => city !== items[i - 1]);
   const tripCities = cities.length > MAX_CITIES_COUNT ? getCitiesString(cities) : cities.join(DASH_SEPARATION);
 
   return (
@@ -48,16 +48,16 @@ const createTripInfoTemplate = (totalPrice, tripDateStart, tripDateEnd, routePoi
 };
 
 export default class TripInfo extends AbstractComponent {
-  constructor(totalPrice, dateStart, dateEnd, routePoints) {
+  constructor(tripInfo) {
     super();
 
-    this._dateStart = dateStart;
-    this._dateEnd = dateEnd;
-    this._routePoints = routePoints;
-    this._totalPrice = totalPrice;
+    this._totalPrice = tripInfo.totalPrice;
+    this._dateStart = tripInfo.dateStart;
+    this._dateEnd = tripInfo.dateEnd;
+    this._points = tripInfo.points;
   }
 
   getTemplate() {
-    return createTripInfoTemplate(this._totalPrice, this._dateStart, this._dateEnd, this._routePoints);
+    return createTripInfoTemplate(this._totalPrice, this._dateStart, this._dateEnd, this._points);
   }
 }

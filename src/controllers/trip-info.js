@@ -27,16 +27,18 @@ export default class TripInfoController {
 
   render() {
     const container = this._container;
-    const events = this._eventsModel.getEvents();
+    const events = this._eventsModel.getEventsAll();
     const eventsByDays = sortEventsByDays(events.slice());
 
-    const totalPrice = getTotalPrice(events);
-    const tripDateStart = events.length ? getFirstElement(eventsByDays).dueDateStart : null;
-    const tirpDateEnd = events.length ? getLastElement(eventsByDays).dueDateEnd : null;
-    const routePoints = eventsByDays.map((item) => item.destination.name);
+    const tripInfo = {
+      totalPrice: getTotalPrice(events),
+      dateStart: events.length ? getFirstElement(eventsByDays).dueDateStart : null,
+      dateEnd: events.length ? getLastElement(eventsByDays).dueDateEnd : null,
+      points: eventsByDays.map((item) => item.destination.name)
+    };
 
     const oldTripInfoComponent = this._tripInfoComponent;
-    this._tripInfoComponent = new TripInfoComponent(totalPrice, tripDateStart, tirpDateEnd, routePoints);
+    this._tripInfoComponent = new TripInfoComponent(tripInfo);
 
     if (oldTripInfoComponent) {
       replace(this._tripInfoComponent, oldTripInfoComponent);

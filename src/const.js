@@ -5,7 +5,7 @@ const STORE_OFFERS_VER = `v1`;
 const STORE_DESTINATIONS_PREFIX = `bigtrip-destinations-localstorage`;
 const STORE_DESTINATIONS_VER = `v1`;
 
-export const StorageName = {
+export const StorageKey = {
   EVENTS: `${STORE_EVENT_PREFIX}-${STORE_EVENT_VER}`,
   OFFERS: `${STORE_OFFERS_PREFIX}-${STORE_OFFERS_VER}`,
   DESTIONATIONS: `${STORE_DESTINATIONS_PREFIX}-${STORE_DESTINATIONS_VER}`
@@ -15,6 +15,11 @@ export const FilterType = {
   EVERYTHING: `everything`,
   FUTURE: `future`,
   PAST: `past`
+};
+
+export const TypeGroup = {
+  'TRANSFER': `transfer`,
+  'ACTIVITI': `activity`
 };
 
 export const typesByGroup = {
