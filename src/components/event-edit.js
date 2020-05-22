@@ -6,6 +6,7 @@ import {toUpperCaseFirstLetter, getTypeGroup} from '../utils/common';
 import {addOneDay} from '../utils/date';
 import {placeholderGroup} from '../const';
 import {Mode as EventControllerMode} from '../controllers/event';
+import {encode} from 'he';
 import flatpickr from 'flatpickr';
 import "flatpickr/dist/flatpickr.min.css";
 
@@ -14,6 +15,11 @@ const ERROR_MESSAGE_CITY_INPUT = `Введите допустимый город
 export const DefaultButtonText = {
   delete: `Delete`,
   save: `Save`,
+};
+
+const destinationElementBorderColor = {
+  VALID: `#0d8ae4`,
+  INVALID: `red`
 };
 
 const getAvailableOffers = (type, offers) => {
@@ -49,11 +55,15 @@ const createDateTimeMarkup = (startDate, endDate) => {
 };
 
 const createEditEventTemplate = (mode = EventControllerMode.DEFAUTL, options = {}) => {
-  const {city, cities, isDestinationShowing, destination, externalData} = options;
-  const {dueDateStart, dueDateEnd, isFavorite, selectedOffers, availableOffers, price, type} = options;
+  const {cities, patternCities, isDestinationShowing, destination, externalData} = options;
+  const {dueDateStart, dueDateEnd, isFavorite, selectedOffers, availableOffers, type} = options;
+  const {city: notSanitizedCity, price: notSanitizedPrice} = options;
 
   const placeholder = placeholderGroup[getTypeGroup(type)];
   const title = `${toUpperCaseFirstLetter(type)} ${placeholder}`;
+
+  const city = notSanitizedCity ? encode(notSanitizedCity) : ``;
+  const price = notSanitizedPrice ? encode(notSanitizedPrice.toString()) : ``;
 
   const isOffersShowing = availableOffers.length;
   const isShowingDetails = isOffersShowing || isDestinationShowing;
@@ -64,7 +74,7 @@ const createEditEventTemplate = (mode = EventControllerMode.DEFAUTL, options = {
   const saveButtonText = externalData.save;
 
   return (
-    `${!isModeAdding ? `<li class="trip-events__item">` : `<div>`}
+    `<li class="trip-events__item">
       <form class="${isModeAdding ? `trip-events__item` : ``} event event--edit" action="#" method="post">
         <header class="event__header">
 
@@ -86,9 +96,10 @@ const createEditEventTemplate = (mode = EventControllerMode.DEFAUTL, options = {
               id="event-destination"
               type="text"
               name="event-destination"
-              value="${city ? city : ``}"
+              value="${city}"
               list="destination-list"
               required
+              pattern="${patternCities}"
             >
             <datalist class="destination-list" id="destination-list">
               ${createCitiesMarkup(cities)}
@@ -107,7 +118,7 @@ const createEditEventTemplate = (mode = EventControllerMode.DEFAUTL, options = {
               id="event-price"
               type="text"
               name="event-price"
-              value="${price ? price : ``}"
+              value="${price}"
               required
               pattern="^[ 0-9]+$"
             >
@@ -132,7 +143,7 @@ const createEditEventTemplate = (mode = EventControllerMode.DEFAUTL, options = {
         </section>
         ` : ``}
       </form>
-    ${!isModeAdding ? `</li>` : `</div>`}`
+    </li>`
   );
 };
 
@@ -145,8 +156,8 @@ export default class EditEvent extends AbstractSmartComponent {
     this._destinations = destinations;
 
     this._type = event.type;
-    this._city = event.destination ? event.destination[`name`] : `Paris`;
     this._destination = event.destination;
+    this._city = event.destination[`name`];
     this._selectedOffers = Object.assign([], event.options);
     this._availableOffers = getAvailableOffers(event.type, offers);
     this._price = event.price;
@@ -155,7 +166,6 @@ export default class EditEvent extends AbstractSmartComponent {
     this._dueDateStart = event.dueDateStart;
 
     this._mode = mode;
-
     this._externalData = DefaultButtonText;
 
     this._submitHandler = null;
@@ -171,17 +181,18 @@ export default class EditEvent extends AbstractSmartComponent {
   getTemplate() {
     return createEditEventTemplate(this._mode, {
       type: this._type,
-      city: this._destination[`name`],
-      cities: this._getCities(),
-      isDestinationShowing: this._destinations.filter((it) => it.name === this._city).length,
-      destination: this._destination,
       price: this._price,
       dueDateStart: this._dueDateStart,
       dueDateEnd: this._dueDateEnd,
       selectedOffers: this._selectedOffers,
       availableOffers: this._availableOffers,
       isFavorite: this._isFavorite,
-      externalData: this._externalData
+      externalData: this._externalData,
+      city: this._destination[`name`],
+      cities: this._getCities(),
+      patternCities: this._getCities().join(`|`),
+      destination: this._destination,
+      isDestinationShowing: this._destinations.filter((it) => it.name === this._city).length
     });
   }
 
@@ -198,16 +209,6 @@ export default class EditEvent extends AbstractSmartComponent {
     this._dueDateEnd = event.dueDateEnd;
     this._dueDateStart = event.dueDateStart;
 
-    this.rerender();
-  }
-
-  getData() {
-    const form = this.getElement().querySelector(`form`);
-    return new FormData(form);
-  }
-
-  setData(data) {
-    this._externalData = Object.assign({}, DefaultButtonText, data);
     this.rerender();
   }
 
@@ -319,13 +320,6 @@ export default class EditEvent extends AbstractSmartComponent {
     });
   }
 
-  _setDestination(city) {
-    this._city = city;
-    this._destination = this._getDestinationByCity(city);
-
-    this.rerender();
-  }
-
   _getDestinationByCity(city) {
     return this._destinations.filter((destination) => destination.name === city)[0];
   }
@@ -334,26 +328,27 @@ export default class EditEvent extends AbstractSmartComponent {
     return this._destinations.map((it) => it.name);
   }
 
+  _setDestination(city) {
+    this._city = city;
+    this._destination = this._getDestinationByCity(city);
+
+    this.rerender();
+  }
+
   _validateDestination(element) {
     const cityInput = element.querySelector(`.event__input--destination`);
-
-    if (!cityInput) {
-      return;
-    }
-
+    const groupDestinationElement = element.querySelector(`.event__field-group--destination`);
     const cities = this._getCities();
-    const patternCities = cities.join(`|`);
-
-    cityInput.setAttribute(`pattern`, patternCities);
 
     cityInput.addEventListener(`input`, (evt) => {
       const city = evt.target.value;
 
       if (cities.includes(city)) {
         cityInput.setCustomValidity(``);
-        this._setDestination(city);
+        groupDestinationElement.style.borderColor = destinationElementBorderColor.VALID;
       } else {
         cityInput.setCustomValidity(ERROR_MESSAGE_CITY_INPUT);
+        groupDestinationElement.style.borderColor = destinationElementBorderColor.INVALID;
       }
     });
 
@@ -382,6 +377,22 @@ export default class EditEvent extends AbstractSmartComponent {
       });
   }
 
+  disabledSubmitForm() {
+    this.getElement().querySelector(`form`)
+      .querySelectorAll(`input, .event__save-btn, .event__delete-btn`)
+      .forEach((element) => element.setAttribute(`disabled`, `disabled`));
+  }
+
+  getData() {
+    const form = this.getElement().querySelector(`form`);
+    return new FormData(form);
+  }
+
+  setData(data) {
+    this._externalData = Object.assign({}, DefaultButtonText, data);
+    this.rerender();
+  }
+
   setClickCloseHandler(handler) {
     if (this._mode !== EventControllerMode.ADDING) {
       this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
@@ -394,30 +405,12 @@ export default class EditEvent extends AbstractSmartComponent {
   }
 
   setSubmitHandler(handler) {
-    const formElement = this._mode === EventControllerMode.ADDING
-      ? this.getElement().querySelector(`form`)
-      : this.getElement();
-
-    formElement.addEventListener(`submit`, (evt) => {
-      handler(evt);
-    });
+    this.getElement().querySelector(`form`)
+      .addEventListener(`submit`, (evt) => {
+        handler(evt);
+      });
 
     this._submitHandler = handler;
-  }
-
-  disabledSubmitForm() {
-    const formElement = this._mode === EventControllerMode.ADDING
-      ? this.getElement().querySelector(`form`)
-      : this.getElement();
-
-    formElement.querySelectorAll(`input, .event__save-btn, .event__delete-btn`)
-      .forEach((element) => element.setAttribute(`disabled`, `disabled`));
-  }
-
-  getFormElement() {
-    return this._mode === EventControllerMode.ADDING
-      ? this.getElement().querySelector(`form`)
-      : this.getElement();
   }
 
   setDeleteButtonClickHandler(handler) {

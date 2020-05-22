@@ -11,7 +11,7 @@ export const createElement = (template) => {
   return newElement.firstChild;
 };
 
-export const render = (container, component, place, referenceElement) => {
+export const render = (container, component, place, beforeElement) => {
   switch (place) {
     case RenderPosition.AFTERBEGIN:
       container.prepend(component.getElement());
@@ -20,7 +20,7 @@ export const render = (container, component, place, referenceElement) => {
       container.append(component.getElement());
       break;
     case RenderPosition.INSERTBEFORE:
-      container.insertBefore(component.getElement(), referenceElement);
+      container.insertBefore(component.getElement(), beforeElement);
       break;
   }
 };

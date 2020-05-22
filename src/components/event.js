@@ -2,13 +2,16 @@ import {formatTime, formatDate, getTimeInterval} from '../utils/date';
 import {toUpperCaseFirstLetter, getTypeGroup} from '../utils/common';
 import {placeholderGroup} from '../const';
 import AbstractComponent from './abstract-component';
+import {encode} from "he";
 
-const MAX_LENGTH_TITLE = 15;
+const MAX_LENGTH_OPTION_TITLE = 15;
 const MAX_COUNT_OPTIONS = 3;
 
 const createOfferMarkup = (option) => {
   const {title, price} = option;
-  const shortTitle = title.length > MAX_LENGTH_TITLE ? title.substr(0, MAX_LENGTH_TITLE) : title;
+  const shortTitle = title.length > MAX_LENGTH_OPTION_TITLE
+    ? title.substr(0, MAX_LENGTH_OPTION_TITLE)
+    : title;
 
   return (
     `<li class="event__offer">
@@ -20,8 +23,9 @@ const createOfferMarkup = (option) => {
 };
 
 const createEventTemplate = (event) => {
-  const {type, destination, price, options, dueDateStart, dueDateEnd} = event;
+  const {type, destination, options, dueDateStart, dueDateEnd, price: notSanitizedPrice} = event;
 
+  const price = encode(notSanitizedPrice.toString());
   const placeholder = placeholderGroup[getTypeGroup(type)];
   const title = `${toUpperCaseFirstLetter(type)} ${placeholder} ${destination[`name`]}`;
 
@@ -86,8 +90,9 @@ export default class Event extends AbstractComponent {
   }
 
   setClickEditHandler(handler) {
-    this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
-      handler();
-    });
+    this.getElement().querySelector(`.event__rollup-btn`)
+      .addEventListener(`click`, () => {
+        handler();
+      });
   }
 }

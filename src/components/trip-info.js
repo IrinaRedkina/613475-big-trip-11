@@ -1,48 +1,63 @@
 import AbstractComponent from './abstract-component';
 import {formatDate} from '../utils/date';
+import {getFirstElement, getLastElement} from '../utils/common';
 
-const MAX_CITIES_IN_TITLE_COUNT = 3;
-const CITIES_SEPARATION = `...`;
+const MAX_CITIES_COUNT = 3;
+const CITIES_SEPARATION = `&mdash; ... &mdash;`;
+const DASH_SEPARATION = ` &mdash; `;
+const DATES_SEPARATION = `&nbsp;&mdash;&nbsp;`;
+const FORMAT_DATE_WITH_MONTH = `MMM DD`;
+const FORMAT_DATE_ONE_DATE = `DD`;
 
 const getCitiesString = (cities) => {
-  const separation = `&mdash; ${CITIES_SEPARATION} &mdash;`;
-  const firstElement = cities[0];
-  const lastElement = cities[cities.length - 1];
-
-  return `${firstElement} ${separation} ${lastElement}`;
+  return `${getFirstElement(cities)} ${CITIES_SEPARATION} ${getLastElement(cities)}`;
 };
 
-const createTripInfoTemplate = (tripDateStart, tripDateEnd, routePoints) => {
-  const isOneMonth = tripDateStart.getMonth() === tripDateEnd.getMonth();
-  const isOneDate = tripDateStart.getDate() === tripDateEnd.getDate();
+const getDateString = (dateStart, dateEnd) => {
+  const isOneMonth = dateStart.getMonth() === dateEnd.getMonth();
+  const isOneDate = dateStart.getDate() === dateEnd.getDate();
 
-  const delimiter = `&nbsp;&mdash;&nbsp;`;
-  const formattingDateEnd = isOneMonth ? `DD` : `MMM DD`;
+  const separation = isOneDate ? `` : DATES_SEPARATION;
+  const formatDateEnd = isOneMonth ? FORMAT_DATE_ONE_DATE : FORMAT_DATE_WITH_MONTH;
 
-  const dateStart = formatDate(tripDateStart, `MMM DD`);
-  const dateEnd = isOneDate ? `` : `${delimiter} ${formatDate(tripDateEnd, formattingDateEnd)}`;
+  const formattedDateStart = formatDate(dateStart, FORMAT_DATE_WITH_MONTH);
+  const formattedDateEnd = formatDate(dateEnd, formatDateEnd);
 
-  const cities = routePoints.filter((city, i, items) => city !== items[i - 1]);
-  const tripCities = cities.length > MAX_CITIES_IN_TITLE_COUNT ? getCitiesString(cities) : cities.join(` &mdash; `);
+  return `${formattedDateStart} ${separation} ${isOneDate ? `` : formattedDateEnd}`;
+};
+
+const createTripInfoTemplate = (totalPrice, tripDateStart, tripDateEnd, points) => {
+  const sum = totalPrice ? totalPrice : 0;
+  const dateString = tripDateStart && tripDateEnd ? getDateString(tripDateStart, tripDateEnd) : ``;
+  const cities = points.filter((city, i, items) => city !== items[i - 1]);
+  const tripCities = cities.length > MAX_CITIES_COUNT ? getCitiesString(cities) : cities.join(DASH_SEPARATION);
 
   return (
-    `<div class="trip-info__main">
-      <h1 class="trip-info__title">${tripCities}</h1>
-      <p class="trip-info__dates">${dateStart} ${dateEnd}</p>
-    </div>`
+    `<section class="trip-main__trip-info  trip-info">
+      <div class="trip-info__main">
+        <h1 class="trip-info__title">${tripCities}</h1>
+
+        <p class="trip-info__dates">${dateString}</p>
+      </div>
+
+      <p class="trip-info__cost">
+        Total: &euro;&nbsp;<span class="trip-info__cost-value">${sum}</span>
+      </p>
+    </section>`
   );
 };
 
 export default class TripInfo extends AbstractComponent {
-  constructor(dateStart, dateEnd, routePoints) {
+  constructor(tripInfo) {
     super();
 
-    this._dateStart = dateStart;
-    this._dateEnd = dateEnd;
-    this._routePoints = routePoints;
+    this._totalPrice = tripInfo.totalPrice;
+    this._dateStart = tripInfo.dateStart;
+    this._dateEnd = tripInfo.dateEnd;
+    this._points = tripInfo.points;
   }
 
   getTemplate() {
-    return createTripInfoTemplate(this._dateStart, this._dateEnd, this._routePoints);
+    return createTripInfoTemplate(this._totalPrice, this._dateStart, this._dateEnd, this._points);
   }
 }

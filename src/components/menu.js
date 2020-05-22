@@ -8,8 +8,8 @@ export const MenuItem = {
 const createMenuTemplate = () => {
   return (
     `<nav class="trip-controls__trip-tabs trip-tabs">
-      <a class="trip-tabs__btn trip-tabs__btn--active" data-href="trip" href="#">Table</a>
-      <a class="trip-tabs__btn" data-href="stats" href="#">Stats</a>
+      <a class="trip-tabs__btn trip-tabs__btn--active" data-href="${MenuItem.TRIP}" href="#">Table</a>
+      <a class="trip-tabs__btn" data-href="${MenuItem.STATISTICS}" href="#">Stats</a>
     </nav>`
   );
 };
@@ -36,11 +36,8 @@ export default class Menu extends AbstractComponent {
   }
 
   _clearActiveItem() {
-    const item = this.getElement().querySelector(`.trip-tabs__btn--active`);
-
-    if (item) {
-      item.classList.remove(`trip-tabs__btn--active`);
-    }
+    this.getElement().querySelector(`.trip-tabs__btn--active`)
+      .classList.remove(`trip-tabs__btn--active`);
   }
 
   setOnChange(handler) {
@@ -52,10 +49,6 @@ export default class Menu extends AbstractComponent {
       }
 
       const menuItem = evt.target.dataset.href;
-
-      if (this._currenMenuItem === menuItem) {
-        return;
-      }
 
       this._currenMenuItem = menuItem;
 

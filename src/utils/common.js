@@ -1,4 +1,4 @@
-import {typesByGroup} from '../const';
+import {typesByGroup, TypeGroup} from '../const';
 
 export const Key = {
   ENTER: `Enter`,
@@ -12,5 +12,17 @@ export const toUpperCaseFirstLetter = (string) => {
 };
 
 export const getTypeGroup = (type) => {
-  return typesByGroup[`transfer`].includes(type) ? `transfer` : `activity`;
+  return typesByGroup[TypeGroup.TRANSFER].includes(type) ? TypeGroup.TRANSFER : TypeGroup.ACTIVITI;
+};
+
+export const sortEventsByDays = (events) => {
+  return events.sort((a, b) => a.dueDateStart.getTime() - b.dueDateStart.getTime());
+};
+
+export const getFirstElement = (array) => {
+  return array[0];
+};
+
+export const getLastElement = (array) => {
+  return array[array.length - 1];
 };

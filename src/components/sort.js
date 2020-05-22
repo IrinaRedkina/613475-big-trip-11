@@ -1,12 +1,12 @@
 import AbstractComponent from './abstract-component';
 
+const SORT_BY_DAY_TEXT = `Day`;
+
 export const SortType = {
   DEFAULT: `event`,
   TIME: `time`,
   PRICE: `price`,
 };
-
-const SORT_BY_DAY_TEXT = `Day`;
 
 const createSortMarkup = (sortType, isChecked) => {
   return (
@@ -44,10 +44,6 @@ export default class Sort extends AbstractComponent {
 
   getTemplate() {
     return createSortTemplate(this._currenSortType);
-  }
-
-  setSortType(sortType) {
-    this._currenSortType = sortType;
   }
 
   setSortTypeChangeHandler(handler) {

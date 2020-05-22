@@ -3,70 +3,21 @@ import Chart from "chart.js";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import moment from 'moment';
 import {getTypeGroup} from '../utils/common';
+import {TypeGroup} from '../const';
 
-const BAR_HEIGHT = 45;
-
-const getOptions = (titleText, formatter) => {
-  return {
-    plugins: {
-      datalabels: {
-        font: {
-          size: 13
-        },
-        color: `#000000`,
-        anchor: `end`,
-        align: `start`,
-        formatter
-      }
-    },
-    title: {
-      display: true,
-      text: titleText,
-      fontColor: `#000000`,
-      fontSize: 23,
-      position: `left`
-    },
-    scales: {
-      yAxes: [{
-        ticks: {
-          fontColor: `#000000`,
-          padding: 5,
-          fontSize: 13,
-        },
-        gridLines: {
-          display: false,
-          drawBorder: false
-        },
-        barThickness: 44,
-      }],
-      xAxes: [{
-        ticks: {
-          display: false,
-          beginAtZero: true,
-        },
-        gridLines: {
-          display: false,
-          drawBorder: false
-        },
-        minBarLength: 50
-      }],
-    },
-    legend: {
-      display: false,
-    },
-    tooltips: {
-      enabled: false,
-    }
-  };
+const OptionSetting = {
+  BAR_HEIGHT: 45,
+  TITLE_FONT_SIZE: 23,
+  FONT_SIZE: 13,
+  PADDING: 5,
+  BAR_THICKNESS: 44,
+  BAR_LENGTH: 100,
 };
 
-const getDataset = (data) => {
-  return [{
-    data,
-    backgroundColor: `#ffffff`,
-    hoverBackgroundColor: `#ffffff`,
-    anchor: `start`
-  }];
+const ChartTitle = {
+  MONEY: `MONEY`,
+  TRANSPORT: `TRANSPORT`,
+  TIME: `TIME SPENT`
 };
 
 const getTimeDiff = (dateStart, dateEnd) => {
@@ -101,7 +52,7 @@ const getPriceForTypes = (events) => {
 
 const getCountForTransports = (events) => {
   const transports = events
-    .filter((event) => getTypeGroup(event.type) === `transfer`)
+    .filter((event) => getTypeGroup(event.type) === TypeGroup.TRANSFER)
     .map((event) => event.type);
 
   return transports.reduce((acc, transport) => {
@@ -126,38 +77,97 @@ const getTimeForTypes = (events) => {
   }, {});
 };
 
-const renderMoneyChart = (moneyCtx, events) => {
-  const labels = Object.keys(getPriceForTypes(events));
-  const data = Object.values(getPriceForTypes(events));
-
-  moneyCtx.height = BAR_HEIGHT * labels.length;
-
-  return new Chart(moneyCtx, {
+const createChart = (ctx, labels, data, title, titleFormat) => {
+  return new Chart(ctx, {
     plugins: [ChartDataLabels],
     type: `horizontalBar`,
     data: {
       labels: toUpperCaseItems(labels),
       datasets: getDataset(data)
     },
-    options: getOptions(`MONEY`, (val) => `€ ${val}`)
+    options: getOptions(title, titleFormat)
   });
+};
+
+const getOptions = (titleText, formatter) => {
+  return {
+    plugins: {
+      datalabels: {
+        font: {
+          size: OptionSetting.FONT_SIZE
+        },
+        color: `#000000`,
+        anchor: `end`,
+        align: `start`,
+        formatter
+      }
+    },
+    title: {
+      display: true,
+      text: titleText,
+      fontColor: `#000000`,
+      fontSize: OptionSetting.TITLE_FONT_SIZE,
+      position: `left`
+    },
+    scales: {
+      yAxes: [{
+        ticks: {
+          fontColor: `#000000`,
+          padding: 5,
+          fontSize: OptionSetting.FONT_SIZE,
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        barThickness: OptionSetting.BAR_THICKNESS,
+      }],
+      xAxes: [{
+        ticks: {
+          display: false,
+          beginAtZero: true,
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        minBarLength: OptionSetting.BAR_LENGTH
+      }],
+    },
+    legend: {
+      display: false,
+    },
+    tooltips: {
+      enabled: false,
+    }
+  };
+};
+
+const getDataset = (data) => {
+  return [{
+    data,
+    backgroundColor: `#ffffff`,
+    hoverBackgroundColor: `#ffffff`,
+    anchor: `start`
+  }];
+};
+
+const renderMoneyChart = (moneyCtx, events) => {
+  const labels = Object.keys(getPriceForTypes(events));
+  const data = Object.values(getPriceForTypes(events));
+
+  moneyCtx.height = OptionSetting.BAR_HEIGHT * labels.length;
+
+  createChart(moneyCtx, labels, data, ChartTitle.MONEY, (val) => `€ ${val}`);
 };
 
 const renderTransportChart = (transportCtx, events) => {
   const labels = Object.keys(getCountForTransports(events));
   const data = Object.values(getCountForTransports(events));
 
-  transportCtx.height = BAR_HEIGHT * labels.length;
+  transportCtx.height = OptionSetting.BAR_HEIGHT * labels.length;
 
-  return new Chart(transportCtx, {
-    plugins: [ChartDataLabels],
-    type: `horizontalBar`,
-    data: {
-      labels: toUpperCaseItems(labels),
-      datasets: getDataset(data)
-    },
-    options: getOptions(`TRANSPORT`, (val) => `${val}x`)
-  });
+  createChart(transportCtx, labels, data, ChartTitle.TRANSPORT, (val) => `${val}x`);
 };
 
 const renderTimeChart = (timeSpendCtx, events) => {
@@ -165,17 +175,9 @@ const renderTimeChart = (timeSpendCtx, events) => {
   const data = Object.values(getTimeForTypes(events));
   const hours = data.map((mlSeconds) => getHours(mlSeconds));
 
-  timeSpendCtx.height = BAR_HEIGHT * labels.length;
+  timeSpendCtx.height = OptionSetting.BAR_HEIGHT * labels.length;
 
-  return new Chart(timeSpendCtx, {
-    plugins: [ChartDataLabels],
-    type: `horizontalBar`,
-    data: {
-      labels: toUpperCaseItems(labels),
-      datasets: getDataset(hours)
-    },
-    options: getOptions(`TIME SPENT`, (val) => `${val}H`)
-  });
+  createChart(timeSpendCtx, labels, hours, ChartTitle.TIME, (val) => `${val}H`);
 };
 
 const createStatisticsTemplate = () => {

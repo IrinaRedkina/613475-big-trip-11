@@ -1,6 +1,6 @@
 import EventAdapter from '../models/event-adapter.js';
 import {nanoid} from 'nanoid';
-import {StorageName} from '../const';
+import {StorageKey} from '../const';
 
 const isOnline = () => {
   return window.navigator.onLine;
@@ -11,12 +11,10 @@ const getSyncedEvents = (items) => {
     .map(({payload}) => payload.point);
 };
 
-const createStoreStructure = (items, isEventsStructure = true) => {
-  return items.reduce((acc, current, index) => {
-    const key = isEventsStructure ? current.id : index;
-
+const createStoreStructure = (items) => {
+  return items.reduce((acc, current) => {
     return Object.assign({}, acc, {
-      [key]: current,
+      [current.id]: current,
     });
   }, {});
 };
@@ -42,40 +40,6 @@ export default class Provider {
     const storeEvents = Object.values(this._store.getItems());
 
     return Promise.resolve(EventAdapter.parseEvents(storeEvents));
-  }
-
-  getOffers() {
-    if (isOnline()) {
-      return this._api.getOffers()
-        .then((offers) => {
-          const items = createStoreStructure(offers, false);
-
-          this._store.setItems(items, StorageName.OFFERS);
-
-          return offers;
-        });
-    }
-
-    const storeOffers = Object.values(this._store.getItems(StorageName.OFFERS));
-
-    return Promise.resolve(storeOffers);
-  }
-
-  getDestinations() {
-    if (isOnline()) {
-      return this._api.getDestinations()
-        .then((destinations) => {
-          const items = createStoreStructure(destinations, false);
-
-          this._store.setItems(items, StorageName.DESTIONATIONS);
-
-          return destinations;
-        });
-    }
-
-    const storeDestinations = Object.values(this._store.getItems(StorageName.DESTIONATIONS));
-
-    return Promise.resolve(storeDestinations);
   }
 
   updateEvent(id, event) {
@@ -140,5 +104,35 @@ export default class Provider {
     }
 
     return Promise.reject(`Sync data failed`);
+  }
+
+  getOffers() {
+    if (isOnline()) {
+      return this._api.getOffers()
+        .then((offers) => {
+          this._store.setItems(offers, StorageKey.OFFERS);
+
+          return offers;
+        });
+    }
+
+    const storeOffers = this._store.getItems(StorageKey.OFFERS);
+
+    return Promise.resolve(storeOffers);
+  }
+
+  getDestinations() {
+    if (isOnline()) {
+      return this._api.getDestinations()
+        .then((destinations) => {
+          this._store.setItems(destinations, StorageKey.DESTIONATIONS);
+
+          return destinations;
+        });
+    }
+
+    const storeDestinations = this._store.getItems(StorageKey.DESTIONATIONS);
+
+    return Promise.resolve(storeDestinations);
   }
 }
