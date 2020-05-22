@@ -366,7 +366,7 @@ export default class EditEvent extends AbstractSmartComponent {
   _validatePrice(element) {
     element.querySelector(`.event__input--price`)
       .addEventListener(`input`, (evt) => {
-        let value = evt.target.value;
+        const value = evt.target.value;
 
         if (!Number(evt.target.value)) {
           evt.target.value = value.slice(0, -1);
