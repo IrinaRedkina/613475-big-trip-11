@@ -1,4 +1,4 @@
-import {FilterType} from "../const";
+import {FilterType} from '../const';
 
 const getEventsFuture = (events, date) => {
   return events.filter((event) => event.dueDateStart > date);

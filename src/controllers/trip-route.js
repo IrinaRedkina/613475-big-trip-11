@@ -165,12 +165,16 @@ export default class TripController {
       });
   }
 
-  _updateEvent(eventController, oldData, newData) {
+  _updateEvent(eventController, oldData, newData, isFavoriteChange) {
     this._api.updateEvent(oldData.id, newData)
       .then((eventModel) => {
         const isSuccess = this._eventsModel.updateEvent(oldData.id, eventModel);
 
-        if (isSuccess) {
+        if (isSuccess && isFavoriteChange) {
+          eventController.setFavorite(eventModel.isFavorite);
+        }
+
+        if (isSuccess && !isFavoriteChange) {
           this._updateEvents();
         }
       })
@@ -230,7 +234,7 @@ export default class TripController {
     this._eventControllers = [];
   }
 
-  _onDataChange(eventController, oldData, newData) {
+  _onDataChange(eventController, oldData, newData, isFavoriteChange = false) {
     if (oldData === emptyEvent) {
       this._creatingEvent = null;
 
@@ -244,7 +248,7 @@ export default class TripController {
     } else if (newData === null) {
       this._removeEvent(eventController, oldData.id);
     } else {
-      this._updateEvent(eventController, oldData, newData);
+      this._updateEvent(eventController, oldData, newData, isFavoriteChange);
     }
   }
 

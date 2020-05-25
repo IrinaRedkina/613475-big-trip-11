@@ -82,6 +82,13 @@ export default class EventController {
       this._eventEditComponent.setClickCloseHandler(() => {
         this._replaceEditToEvent();
       });
+
+      this._eventEditComponent.setFavoriteButtonClickHandler(() => {
+        const formData = this._eventEditComponent.getData();
+        const data = parseFormData(formData, destinations);
+
+        this._onDataChange(this, event, data, true);
+      });
     }
 
     this._eventEditComponent.setSubmitHandler((evt) => {
@@ -127,6 +134,10 @@ export default class EventController {
         this._eventEditComponent.initFlatpickr();
         break;
     }
+  }
+
+  setFavorite(isFavorite) {
+    this._eventEditComponent.setFavorite(isFavorite);
   }
 
   destroy() {

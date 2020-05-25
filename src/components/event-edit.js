@@ -171,6 +171,7 @@ export default class EditEvent extends AbstractSmartComponent {
     this._submitHandler = null;
     this._closeEditHandler = null;
     this._deleteButtonClickHandler = null;
+    this._favoriteHandler = null;
 
     this._dateStartflatpickr = null;
     this._dateEndflatpickr = null;
@@ -222,6 +223,7 @@ export default class EditEvent extends AbstractSmartComponent {
     this.setSubmitHandler(this._submitHandler);
     this.setClickCloseHandler(this._closeEditHandler);
     this.setDeleteButtonClickHandler(this._deleteButtonClickHandler);
+    this.setFavoriteButtonClickHandler(this._favoriteHandler);
   }
 
   destroyFlatpickr() {
@@ -261,14 +263,6 @@ export default class EditEvent extends AbstractSmartComponent {
     this._setDates(element);
     this._validateDestination(element);
     this._validatePrice(element);
-
-    if (this._mode !== EventControllerMode.ADDING) {
-      element.querySelector(`.event__favorite-checkbox`)
-        .addEventListener(`change`, () => {
-          this._isFavorite = !this._isFavorite;
-          this.rerender();
-        });
-    }
   }
 
   _setTypeEvent(element) {
@@ -395,13 +389,27 @@ export default class EditEvent extends AbstractSmartComponent {
 
   setClickCloseHandler(handler) {
     if (this._mode !== EventControllerMode.ADDING) {
-      this.getElement().querySelector(`.event__rollup-btn`).addEventListener(`click`, () => {
-        this.reset();
-        handler();
-      });
+      this.getElement().querySelector(`.event__rollup-btn`)
+        .addEventListener(`click`, () => {
+          this.reset();
+          handler();
+        });
 
       this._closeEditHandler = handler;
     }
+  }
+
+  setFavoriteButtonClickHandler(handler) {
+    if (this._mode !== EventControllerMode.ADDING) {
+      this.getElement().querySelector(`.event__favorite-checkbox`)
+        .addEventListener(`change`, handler);
+
+      this._favoriteHandler = handler;
+    }
+  }
+
+  setFavorite(isFavorite) {
+    this._isFavorite = isFavorite;
   }
 
   setSubmitHandler(handler) {

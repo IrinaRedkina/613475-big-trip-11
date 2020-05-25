@@ -30,8 +30,8 @@ const getHours = (mlSeconds) => {
   return duration.days() * 24 + duration.hours();
 };
 
-const toUpperCaseItems = (array) => {
-  return array.map((item) => item.toUpperCase());
+const toUpperCaseItems = (strings) => {
+  return strings.map((string) => string.toUpperCase());
 };
 
 const getPriceForTypes = (events) => {

@@ -14,7 +14,7 @@ import {MenuItem} from './components/menu';
 import {RenderPosition, render, remove} from './utils/render';
 import {addEventButton} from './const';
 
-const AUTHORIZATION = `Basic MyH4ckBwZXMzd32yKL6_`;
+const AUTHORIZATION = `Basic MyH4ckBwZXMzd32yK23_`;
 const END_POINT = `https://11.ecmascript.pages.academy/big-trip`;
 const OFFLINE_TITLE = `[offline]`;
 
